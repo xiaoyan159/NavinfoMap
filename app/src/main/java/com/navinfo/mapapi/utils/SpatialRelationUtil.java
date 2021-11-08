@@ -29,7 +29,7 @@ public class SpatialRelationUtil extends Object{
      * @return
      */
     static LatLng 	getNearestPointFromLine(java.util.List<LatLng> mPoints, LatLng point){
-        return null
+        return null;
     }
 
     /**

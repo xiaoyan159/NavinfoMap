@@ -1,5 +1,7 @@
 package com.navinfo.mapapi.animation;
 
+import android.graphics.Interpolator;
+
 /**
  * Marker 旋转动画接口类
  */

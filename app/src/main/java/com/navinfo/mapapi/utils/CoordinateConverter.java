@@ -9,7 +9,7 @@ public class CoordinateConverter {
     /**
      * 枚举常量概要
      */
-    public static enum CoordType extends java.lang.Enum<CoordType>{
+    public static enum CoordType{
         COMMON,GPS,NM02
     }
 }

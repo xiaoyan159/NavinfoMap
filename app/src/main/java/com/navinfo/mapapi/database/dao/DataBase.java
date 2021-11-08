@@ -12,20 +12,20 @@ public abstract class DataBase extends java.lang.Object {
     /**
      * 新增
      */
-    abstract void insert();
+    public void insert();
 
     /**
      * 更新
      */
-    abstract void update();
+    public void update();
 
     /**
      * 查找
      */
-    abstract void find();
+    public void find();
 
     /**
      * 删除
      */
-    abstract void delete();
+    public void delete();
 }

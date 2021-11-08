@@ -37,20 +37,20 @@ public abstract class Animation extends java.lang.Object {
      * Marker 动画监听接口
      */
     public static interface AnimationListener {
-        void onAnimationCancel()
+        void onAnimationCancel();
 
-        void onAnimationEnd()
+        void onAnimationEnd();
 
-        void onAnimationRepeat()
+        void onAnimationRepeat();
 
-        void onAnimationStart()
+        void onAnimationStart();
     }
 
 
     /**
      * Marker 动画重复模式枚举类
      */
-    public static enum RepeatMode extends java.lang.Enum<RepeatMode> {
+    public static enum RepeatMode {
         RESTART,
         REVERSE
     }

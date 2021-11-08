@@ -1,5 +1,7 @@
 package com.navinfo.mapapi.map;
 
+import android.content.Context;
+import android.util.AttributeSet;
 import android.view.ViewGroup;
 
 /**
@@ -41,7 +43,6 @@ public final class MapView extends ViewGroup {
      * @param options
      */
     MapView(Context context, NavinfoMapOptions options){
-
     }
 
 }

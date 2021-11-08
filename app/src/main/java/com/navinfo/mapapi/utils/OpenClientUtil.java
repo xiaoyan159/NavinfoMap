@@ -1,5 +1,7 @@
 package com.navinfo.mapapi.utils;
 
+import android.content.Context;
+
 /**
  * 调起Navinfo客户端工具类
  */
