@@ -7,7 +7,7 @@
     <option name="excludeFilter" value="" />
   </component>
   <component name="JavadocGenerationManager">
-    <option name="OUTPUT_DIRECTORY" value="$USER_HOME$/Desktop/api" />
+    <option name="OUTPUT_DIRECTORY" value="$PROJECT_DIR$/doc/api" />
     <option name="OPTION_SCOPE" value="package" />
     <option name="OTHER_OPTIONS" value="-encoding UTF-8 -charset UTF-8" />
   </component>

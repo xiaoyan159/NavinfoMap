@@ -1,6 +1,10 @@
 package com.navinfo.mapapi.map;
 
 import android.graphics.Bitmap;
+import android.view.MotionEvent;
+
+import com.navinfo.mapapi.model.LatLng;
+import com.navinfo.mapapi.model.LatLngBounds;
 
 /**
  * 定义 NavinfoMap 地图对象的操作方法与接口
@@ -15,6 +19,7 @@ public class NavinfoMap extends Object {
      */
     public Overlay addOverlay(OverlayOptions options) {
 
+        return null;
     }
 
     /**
@@ -25,6 +30,7 @@ public class NavinfoMap extends Object {
      */
     public java.util.List<Overlay> addOverlays(java.util.List<OverlayOptions> options) {
 
+        return null;
     }
 
 
@@ -36,6 +42,7 @@ public class NavinfoMap extends Object {
      */
     public TileOverlay addTileLayer(TileOverlayOptions overlayOptions) {
 
+        return null;
     }
 
 
@@ -90,7 +97,7 @@ public class NavinfoMap extends Object {
      * @return
      */
     public java.util.List<InfoWindow> getAllInfoWindows() {
-
+        return null;
     }
 
     /**
@@ -422,6 +429,108 @@ public class NavinfoMap extends Object {
 
     }
 
+    /**
+     * 设置 Marker 拖拽事件监听者
+     *
+     * @param listener
+     */
+    public void setOnMarkerDragListener(OnMarkerDragListener listener) {
+
+    }
+
+    /**
+     * 设置地图 MultiPoint 覆盖物点击事件监听者
+     *
+     * @param listener
+     */
+    public void setOnMultiPointClickListener(OnMultiPointClickListener listener) {
+
+    }
+
+    /**
+     * 设置定位图标点击事件监听者
+     *
+     * @param listener
+     */
+    public void setOnMyLocationClickListener(OnMyLocationClickListener listener) {
+
+    }
+
+
+    /**
+     * 设置地图 Polyline 覆盖物点击事件监听者
+     *
+     * @param listener
+     */
+    public void setOnPolylineClickListener(OnPolylineClickListener listener) {
+
+    }
+
+
+    /**
+     * 设置地图上控件与地图边界的距离，包含比例尺、缩放控件、logo、指南针的位置 只有在 OnMapLoadedCallback.onMapLoaded() 之后设置才生效
+     *
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     */
+    public void setViewPadding(int left, int top, int right, int bottom) {
+
+    }
+
+    /**
+     * 显示 InfoWindow, 该接口会先隐藏其他已添加的InfoWindow, 再添加新的InfoWindow
+     *
+     * @param infoWindow
+     */
+    public void showInfoWindow(InfoWindow infoWindow) {
+
+    }
+
+    /**
+     * 显示 InfoWindow, 该接口可以设置是否在添加InfoWindow之前，先隐藏其他已经添加的InfoWindow.
+     *
+     * @param infoWindow
+     * @param isHideOthers
+     */
+    public void showInfoWindow(InfoWindow infoWindow, boolean isHideOthers) {
+
+    }
+
+    /**
+     * @param infoWindowList
+     */
+    public void showInfoWindows(java.util.List<InfoWindow> infoWindowList) {
+
+    }
+
+    /**
+     * 控制是否显示底图默认标注, 默认显示
+     *
+     * @param isShow
+     */
+    public void showMapPoi(boolean isShow) {
+
+    }
+
+    /**
+     * @param callback
+     */
+    public void snapshot(SnapshotReadyCallback callback) {
+
+    }
+
+    /**
+     * 切换指定图层的顺序
+     *
+     * @param srcLayer
+     * @param destLayer
+     */
+    public void switchLayerOrder(MapLayer srcLayer, MapLayer destLayer) {
+
+    }
+
 
     /**
      * 地图单击事件监听接口
@@ -560,5 +669,89 @@ public class NavinfoMap extends Object {
          * @return
          */
         boolean onMarkerClick(Marker marker);
+    }
+
+    /**
+     * 地图 Marker 覆盖物拖拽事件监听接口
+     */
+    public static interface OnMarkerDragListener {
+
+        /**
+         * Marker 被拖拽的过程中。
+         *
+         * @param marker
+         */
+        void onMarkerDrag(Marker marker);
+
+        /**
+         * Marker 拖拽结束
+         *
+         * @param marker
+         */
+        void onMarkerDragEnd(Marker marker);
+
+        /**
+         * 开始拖拽 Marker
+         *
+         * @param marker
+         */
+        void onMarkerDragStart(Marker marker);
+
+    }
+
+    /**
+     * 地图MultiPoint覆盖物点击事件监听接口
+     */
+    public static interface OnMultiPointClickListener {
+
+        /**
+         * 地图 MultiPoint 覆盖物点击事件监听函数
+         *
+         * @param multiPoint
+         * @param multiPointItem
+         * @return
+         */
+        boolean onMultiPointClick(MultiPoint multiPoint, MultiPointItem multiPointItem);
+    }
+
+    /**
+     * 地图定位图标点击事件监听接口
+     */
+    public static interface OnMyLocationClickListener {
+
+        /**
+         * 地图定位图标点击事件监听函数
+         *
+         * @return
+         */
+        boolean onMyLocationClick();
+
+    }
+
+    /**
+     * 地图polyline覆盖物点击事件监听接口
+     */
+    public static interface OnPolylineClickListener {
+
+        /**
+         * 地图 Polyline 覆盖物点击事件监听函数
+         *
+         * @param polyline
+         * @return
+         */
+        boolean onPolylineClick(Polyline polyline);
+    }
+
+    /**
+     * 地图截屏回调接口
+     */
+    public static interface SnapshotReadyCallback {
+        /**
+         * 地图截屏回调接口
+         *
+         * @param snapshot
+         */
+        void onSnapshotReady(Bitmap snapshot);
+
     }
 }
