@@ -13,11 +13,63 @@ buildscript {
 }
 
 allprojects {
+    group = 'org.mapsforge'
+    version = 'master-SNAPSHOT'
+    ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
+
+    ext.androidBuildVersionTools = "29.0.2"
+    ext.coreVersion = "0.16.0"
+    ext.androidVersion = "0.16.0"
+    ext.gdxVersion = "1.9.10"
+    ext.gwtVersion = "2.8.2"
+    ext.slf4jVersion = "1.8.0"
+    ext.ndkVersion = "21.3.6528147"
+
     repositories {
         google()
         jcenter()
     }
+
+    if (JavaVersion.current().isJava8Compatible()) {
+        tasks.withType(Javadoc) {
+            options.addStringOption('Xdoclint:none', '-quiet')
+            logging.captureStandardError LogLevel.INFO
+            logging.captureStandardOutput LogLevel.INFO
+        }
+    }
 }
+
+static def androidCompileSdk() { return 29 }
+
+// 14 for Support Library, 16 for sqlite-android
+static def androidMinSdk() { return 19 }
+
+static def androidTargetSdk() { return 30 }
+
+static def versionCode() { return 1 }
+
+def versionName() { return version }
+
+subprojects {
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }
+    }
+
+    tasks.withType(JavaCompile) {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+        options.encoding = 'UTF-8'
+        if (JavaVersion.current().isJava9Compatible()) {
+            if (!project.properties.containsKey('android')) {
+                options.compilerArgs.addAll(['--release', '7'])
+            }
+        }
+    }
+}
+
 
 task clean(type: Delete) {
     delete rootProject.buildDir

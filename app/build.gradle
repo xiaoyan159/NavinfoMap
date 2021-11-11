@@ -40,4 +40,16 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+    //vtm
+    implementation "org.mapsforge:vtm:$coreVersion"
+    implementation "org.mapsforge:vtm-themes:$coreVersion"
+    implementation "org.mapsforge:vtm-android:$coreVersion"
+    implementation "org.mapsforge:vtm-android:$coreVersion:natives-armeabi-v7a"
+    implementation "org.mapsforge:vtm-android:$coreVersion:natives-arm64-v8a"
+    implementation "org.mapsforge:vtm-android:$coreVersion:natives-x86"
+    implementation "org.mapsforge:vtm-android:$coreVersion:natives-x86_64"
+    implementation "org.mapsforge:vtm-http:$coreVersion"
+    implementation "org.mapsforge:vtm-mvt:$coreVersion"
+
 }

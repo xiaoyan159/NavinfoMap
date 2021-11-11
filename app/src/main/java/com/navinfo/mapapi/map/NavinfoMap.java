@@ -6,10 +6,28 @@ import android.view.MotionEvent;
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
 
+import org.oscim.map.Map;
+
 /**
  * 定义 NavinfoMap 地图对象的操作方法与接口
  */
 public class NavinfoMap extends Object {
+
+    /**
+     *
+     */
+    Map map;
+    /**
+     *
+     */
+    NIMapView mMapView;
+    /**
+     * 构造函数
+     */
+    public NavinfoMap(NIMapView niMapView) {
+        this.mMapView = niMapView;
+        this.map = new Map();
+    }
 
     /**
      * 向地图添加一个 Overlay
