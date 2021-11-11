@@ -4,8 +4,12 @@ import android.app.Activity;
 import android.graphics.BitmapFactory;
 import android.graphics.Paint;
 import android.os.Environment;
+import android.view.View;
+
 import com.navinfo.mapapi.map.NIMapView;
 import com.navinfo.mapapi.map.NavinfoMap;
+
+import org.oscim.core.MapPosition;
 import org.oscim.layers.GroupLayer;
 import okhttp3.OkHttpClient;
 
@@ -82,32 +86,7 @@ public class MapManager {
 
 
     private void loadTheme(final int styleId) {
-        boolean bHis = false;
-        for (Layer layer : mMap.layers()) {
-            if (layer instanceof VectorTileLayer) {
-                bHis = true;
-                break;
-            }
-        }
-        if (!bHis) {
-            mMapView.oldMap().updateMap(true);
-            return;
-        }
-        switch (styleId) {
-            case 2:
-                mMapView.oldMap().setTheme(VtmThemes.OSMAGRAY, true);
-                break;
-            case 3:
-                mMapView.oldMap().setTheme(VtmThemes.MAPZEN, true);
-                break;
-            case 4:
-                mMapView.oldMap().setTheme(VtmThemes.TRONRENDER, true);
-                break;
-            default:
-                mMapView.oldMap().setTheme(VtmThemes.DEFAULT, true);
-                break;
-        }
-        mMapView.oldMap().updateMap(true);
+
     }
 
     public void zoomIn(View view) {
@@ -135,50 +114,6 @@ public class MapManager {
             }, 300);
         }
         mMap.zoomOut();
-    }
-
-    private void showBaseMap() {
-        if (otherBaseLayer != null && mMap.layers().contains(otherBaseLayer)) {
-            mMap.layers().remove(otherBaseLayer);
-            otherBaseLayer = null;
-        }
-        for (Layer layer : baseGroupLayer.layers) {
-            layer.setEnabled(true);
-        }
-
-        mMap.updateMap(true);
-        loadTheme(1);
-    }
-
-    public void changeMapStyle(String type, String url, int style) {
-        if (type.equals("smap")) {
-            switch (style) {
-                case 2:
-                    showSMap();
-                    loadTheme(1);
-                    break;
-                case 3:
-                    showSMap();
-                    loadTheme(4);
-                    break;
-                case 4:
-                    showSMap();
-                    loadTheme(2);
-                    break;
-                case 5:
-                    showOtherMap("http://10.130.10.206/service/yingxiang/map/rest/satellite/?z={z}&x={x}&y={y}");
-                    loadTheme(1);
-                    break;
-                default:
-                    showBaseMap();
-                    break;
-
-            }
-        } else {
-            showOtherMap(url);
-            loadTheme(style);
-        }
-
     }
 
 
