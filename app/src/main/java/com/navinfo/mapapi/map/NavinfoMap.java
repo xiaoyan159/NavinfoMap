@@ -26,7 +26,17 @@ public class NavinfoMap extends Object {
      */
     public NavinfoMap(NIMapView niMapView) {
         this.mMapView = niMapView;
-        this.map = new Map();
+        this.map = niMapView.getVtmMap();
+    }
+
+    /**
+     * 获取地图的当前状态
+     *
+     * @return
+     */
+    public Map getVtmMap() {
+
+        return map;
     }
 
     /**

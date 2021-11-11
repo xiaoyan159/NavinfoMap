@@ -13,6 +13,7 @@ import android.widget.LinearLayout;
 import com.navinfo.mapapi.R;
 
 import org.oscim.android.MapView;
+import org.oscim.map.Map;
 
 /**
  * 一个显示地图的视图（View）。它负责从服务端获取地图数据。它将会捕捉屏幕触控手势事件
@@ -89,7 +90,7 @@ public final class NIMapView extends ViewGroup {
      */
     public NIMapView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        ViewGroup.LayoutParams layoutParams = new MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        ViewGroup.LayoutParams layoutParams = new MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         mapView = new MapView(context);
         addView(mapView, layoutParams);
         compassImage = new ImageView(context);
@@ -97,12 +98,76 @@ public final class NIMapView extends ViewGroup {
         ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         addView(compassImage, imageParams);
         map = new NavinfoMap(this);
-
     }
 
     @Override
     public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
         return new MarginLayoutParams(getContext(), attrs);
+    }
+
+    /**
+     * 计算所有ChildView的宽度和高度 然后根据ChildView的计算结果，设置自己的宽和高
+     */
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        /**
+         * 获得此ViewGroup上级容器为其推荐的宽和高，以及计算模式
+         */
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
+
+
+        // 计算出所有的childView的宽和高
+        measureChildren(widthMeasureSpec, heightMeasureSpec);
+        /**
+         * 记录如果是wrap_content是设置的宽和高
+         */
+        int width = 0;
+        int height = 0;
+
+        int cCount = getChildCount();
+
+        int cWidth = 0;
+        int cHeight = 0;
+        MarginLayoutParams cParams = null;
+
+        // 用于计算左边两个childView的高度
+        int lHeight = 0;
+        // 用于计算右边两个childView的高度，最终高度取二者之间大值
+        int rHeight = 0;
+
+        // 用于计算上边两个childView的宽度
+        int tWidth = 0;
+        // 用于计算下面两个childiew的宽度，最终宽度取二者之间大值
+        int bWidth = 0;
+
+        /**
+         * 根据childView计算的出的宽和高，以及设置的margin计算容器的宽和高，主要用于容器是warp_content时
+         */
+        for (int i = 0; i < cCount; i++) {
+            View childView = getChildAt(i);
+            cWidth = childView.getMeasuredWidth();
+            cHeight = childView.getMeasuredHeight();
+            cParams = (MarginLayoutParams) childView.getLayoutParams();
+
+            // 上面两个childView
+            tWidth += cWidth + cParams.leftMargin + cParams.rightMargin;
+            lHeight += cHeight + cParams.topMargin + cParams.bottomMargin;
+
+        }
+
+        width = Math.max(tWidth, bWidth);
+        height = Math.max(lHeight, rHeight);
+
+        /**
+         * 如果是wrap_content设置为我们计算的值
+         * 否则：直接设置为父容器计算的值
+         */
+        setMeasuredDimension((widthMode == MeasureSpec.EXACTLY) ? sizeWidth
+                : width, (heightMode == MeasureSpec.EXACTLY) ? sizeHeight
+                : height);
     }
 
     @Override
@@ -246,6 +311,17 @@ public final class NIMapView extends ViewGroup {
     public NavinfoMap getMap() {
 
         return map;
+    }
+
+    /**
+     * 获取VTM-Map
+     *
+     * @return
+     */
+    public Map getVtmMap() {
+        if(mapView!=null)
+            return mapView.map();
+        return null;
     }
 
     /**
