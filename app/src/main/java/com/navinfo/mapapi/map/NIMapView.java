@@ -266,13 +266,14 @@ public final class NIMapView extends ViewGroup {
         }
     }
 
-/*    *//**
+
+    /**
      * @param child
      * @param params
-     *//*
+     */
     public void addView(View child, LayoutParams params) {
         super.addView(child,params);
-    }*/
+    }
 
     /**
      * 从NIMapView中移除一个子View
