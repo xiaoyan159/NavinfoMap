@@ -4,6 +4,7 @@ com.navinfo.mapapi.database.dao
 com.navinfo.mapapi.database.impl
 com.navinfo.mapapi.map
 com.navinfo.mapapi.map.offline
+com.navinfo.mapapi.map.source
 com.navinfo.mapapi.model
 com.navinfo.mapapi.navi
 com.navinfo.mapapi.search.core
