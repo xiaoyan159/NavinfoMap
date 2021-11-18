@@ -9,9 +9,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import com.navinfo.mapapi.MapManager;
 import com.navinfo.mapapi.R;
 import org.oscim.android.MapView;
+import org.oscim.layers.Layer;
 import org.oscim.map.Map;
+import org.oscim.scalebar.MapScaleBarLayer;
 
 /**
  * 一个显示地图的视图（View）。它负责从服务端获取地图数据。它将会捕捉屏幕触控手势事件
@@ -112,6 +116,14 @@ public final class NIMapView extends ViewGroup {
 
             @Override
             public void onClick(View arg0) {
+//                if (mapView.map().layers()!=null&&!mapView.map().layers().isEmpty()) {
+//                    for (Layer layer : mapView.map().layers()) {
+//                        if (layer instanceof MapScaleBarLayer) {
+//                        }
+//                    }
+//                }
+
+                NaviMapScaleBar naviMapScaleBar = MapManager.getInstance().getNaviMapScaleBar();
 
             }
         });
