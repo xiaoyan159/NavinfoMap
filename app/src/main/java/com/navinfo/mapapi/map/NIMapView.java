@@ -9,9 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-
 import com.navinfo.mapapi.R;
-
 import org.oscim.android.MapView;
 import org.oscim.map.Map;
 
@@ -42,6 +40,11 @@ public final class NIMapView extends ViewGroup {
     private ImageView compassImage;
 
     /**
+     *缩放按钮
+     */
+    private ImageView zoomInImage,zoomOutImage;
+
+    /**
      * 定位图标位置
      */
     private COMPASS_GRAVITY compassGravity = COMPASS_GRAVITY.LEFT_TOP;
@@ -50,6 +53,11 @@ public final class NIMapView extends ViewGroup {
      * 偏移位置
      */
     private int offCompassX = 0, offCompassY = 0;
+
+    /**
+     * 缩放按钮位置
+     */
+    private Point zoomPoint = new Point(1300,1650);
 
     /**
      * 根据给定的参数构造一个NIMapView 的新对象。
@@ -97,6 +105,28 @@ public final class NIMapView extends ViewGroup {
         compassImage.setImageResource(R.mipmap.compass);
         ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         addView(compassImage, imageParams);
+
+        zoomInImage = new ImageView(context);
+        zoomInImage.setImageResource(R.drawable.icon_zoom_in);
+        zoomInImage.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+
+            }
+        });
+        addView(zoomInImage, imageParams);
+
+        zoomOutImage = new ImageView(context);
+        zoomOutImage.setImageResource(R.drawable.icon_zoom_out);
+        zoomOutImage.setOnClickListener(new OnClickListener() {
+
+            @Override
+            public void onClick(View arg0) {
+            }
+        });
+        addView(zoomOutImage, imageParams);
+
         map = new NavinfoMap(this);
     }
 
@@ -205,9 +235,15 @@ public final class NIMapView extends ViewGroup {
                     case RIGHT_BOTTOM:
                         cl = getWidth() - cWidth - cParams.leftMargin
                                 - cParams.rightMargin - offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY ;
                         break;
                 }
+            }else if(zoomInImage==childView){
+                cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
+                ct = zoomPoint.y - cParams.bottomMargin;
+            }else if(zoomOutImage==childView){
+                cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
+                ct = zoomPoint.y - cParams.bottomMargin + cHeight + 10;
             } else {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
@@ -332,6 +368,9 @@ public final class NIMapView extends ViewGroup {
      */
     public int getMapLevel() {
 
+        if(mapView!=null&&mapView.map()!=null)
+            return mapView.map().getMapPosition().getZoomLevel();
+
         return 0;
     }
 
@@ -376,13 +415,22 @@ public final class NIMapView extends ViewGroup {
 
 
     /**
+     * 设置缩放控件的位置，在 onMapLoadFinish 后生效
+     *
+     * @param p
+     */
+    public void setZoomControlsPosition(Point p) {
+        this.zoomPoint = p;
+    }
+
+    /**
      * 获取缩放控件的屏幕位置
      *
      * @return
      */
     public Point getZoomControlsPosition() {
 
-        return null;
+        return zoomPoint;
     }
 
 
@@ -406,14 +454,6 @@ public final class NIMapView extends ViewGroup {
 
     }
 
-    /**
-     * 设置缩放控件的位置，在 onMapLoadFinish 后生效
-     *
-     * @param p
-     */
-    public void setZoomControlsPosition(Point p) {
-
-    }
 
     /**
      * 设置是否显示比例尺控件
