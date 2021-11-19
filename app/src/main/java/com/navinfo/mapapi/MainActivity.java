@@ -2,6 +2,7 @@ package com.navinfo.mapapi;
 
 import android.Manifest;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.view.View;
 import androidx.fragment.app.FragmentActivity;
@@ -31,6 +32,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
      */
     private LocationTextureLayer mLocationLayer;
     private NIMapView niMapView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,7 +64,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         MapManager.getInstance().location();
         AndroidBitmap mCenterMakerBitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker));
         MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
-
+        niMapView.setZoomControlsPosition(new Point(1400,1400));
+        niMapView.showZoomControls(true);
     }
 
     @Override

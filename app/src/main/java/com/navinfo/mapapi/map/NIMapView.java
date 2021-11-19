@@ -107,25 +107,25 @@ public final class NIMapView extends ViewGroup {
         addView(compassImage, imageParams);
 
         zoomInImage = new ImageView(context);
-        zoomInImage.setImageResource(R.drawable.icon_zoom_in);
+        zoomInImage.setImageResource(R.drawable.icon_map_zoom_in);
         zoomInImage.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
-
+                zoomIn(arg0);
             }
         });
-        addView(zoomInImage, imageParams);
 
         zoomOutImage = new ImageView(context);
-        zoomOutImage.setImageResource(R.drawable.icon_zoom_out);
+        zoomOutImage.setImageResource(R.drawable.icon_map_zoom_out);
         zoomOutImage.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
+                zoomOut(arg0);
             }
         });
-        addView(zoomOutImage, imageParams);
+
 
         map = new NavinfoMap(this);
     }
@@ -243,7 +243,7 @@ public final class NIMapView extends ViewGroup {
                 ct = zoomPoint.y - cParams.bottomMargin;
             }else if(zoomOutImage==childView){
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
-                ct = zoomPoint.y - cParams.bottomMargin + cHeight + 10;
+                ct = zoomPoint.y - cParams.bottomMargin + 80 + 24;
             } else {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
@@ -375,6 +375,38 @@ public final class NIMapView extends ViewGroup {
     }
 
     /**
+     * @param view
+     */
+    public void zoomIn(View view) {
+        if (view != null) {
+            view.setEnabled(false);
+            view.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    view.setEnabled(true);
+                }
+            }, 300);
+        }
+        map.zoomIn();
+    }
+
+    /**
+     * @param view
+     */
+    public void zoomOut(View view) {
+        if (view != null) {
+            view.setEnabled(false);
+            view.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    view.setEnabled(true);
+                }
+            }, 300);
+        }
+        map.zoomOut();
+    }
+
+    /**
      * 获取比例尺控件对应的屏幕位置
      *
      * @return
@@ -470,7 +502,14 @@ public final class NIMapView extends ViewGroup {
      * @param show
      */
     public void showZoomControls(boolean show) {
-
+        if(show){
+            ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            addView(zoomOutImage, imageParams);
+            addView(zoomInImage, imageParams);
+        }else{
+            removeView(zoomInImage);
+            removeView(zoomOutImage);
+        }
     }
 
 }

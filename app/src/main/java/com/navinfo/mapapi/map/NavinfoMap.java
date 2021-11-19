@@ -6,6 +6,7 @@ import android.view.MotionEvent;
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
 
+import org.oscim.core.MapPosition;
 import org.oscim.map.Map;
 
 /**
@@ -354,6 +355,24 @@ public class NavinfoMap extends Object {
      */
     public void setMaxAndMinZoomLevel(float max, float min) {
 
+    }
+
+    /**
+     * 缩放
+     */
+    public void zoomIn() {
+        MapPosition mapPosition = map.getMapPosition();
+        mapPosition.setZoomLevel(mapPosition.getZoomLevel() + 1);
+        map.setMapPosition(mapPosition);
+    }
+
+    /**
+     * 缩放
+     */
+    public void zoomOut() {
+        MapPosition mapPosition = map.getMapPosition();
+        mapPosition.setZoomLevel(mapPosition.getZoomLevel() - 1);
+        map.setMapPosition(mapPosition);
     }
 
     /**
