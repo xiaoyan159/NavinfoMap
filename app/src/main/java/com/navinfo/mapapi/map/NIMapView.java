@@ -41,7 +41,7 @@ public final class NIMapView extends ViewGroup {
     /**
      *定位图标
      */
-    private ImageView compassImage;
+    protected ImageView compassImage;
 
     /**
      *图片旋转
@@ -62,11 +62,6 @@ public final class NIMapView extends ViewGroup {
      * 定位图标位置
      */
     private COMPASS_GRAVITY compassGravity = COMPASS_GRAVITY.LEFT_TOP;
-
-    /**
-     * 偏移位置
-     */
-    private int offCompassX = 0, offCompassY = 0;
 
     /**
      * 缩放按钮位置
@@ -119,6 +114,7 @@ public final class NIMapView extends ViewGroup {
         super(context, attrs, defStyleAttr, defStyleRes);
         ViewGroup.LayoutParams layoutParams = new MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         mapView = new MapView(context);
+        map = new NavinfoMap(this);
         addView(mapView, layoutParams);
         compassImage = new ImageView(context);
         compassImage.setImageResource(R.mipmap.compass);
@@ -136,10 +132,16 @@ public final class NIMapView extends ViewGroup {
                     mLastRotateZ = mapPosition.bearing;
                 }
 
-                //2D,正北隐藏
-                if (compassImage.getVisibility() != View.VISIBLE && (mapPosition.tilt != 0 || mapPosition.bearing != 0)) {
-                    compassImage.setVisibility(View.VISIBLE);
-                } else if (compassImage.getVisibility() == View.VISIBLE && mapPosition.tilt == 0 && mapPosition.bearing == 0) {
+                //增加控制联动效果
+                if(map!=null&&map.isEnableCompassImage()){
+                    //2D,正北隐藏
+                    if (compassImage.getVisibility() != View.VISIBLE && (mapPosition.tilt != 0 || mapPosition.bearing != 0)) {
+                        compassImage.setVisibility(View.VISIBLE);
+                    } else if (compassImage.getVisibility() == View.VISIBLE && mapPosition.tilt == 0 && mapPosition.bearing == 0) {
+                        compassImage.clearAnimation();
+                        compassImage.setVisibility(View.GONE);
+                    }
+                }else{
                     compassImage.clearAnimation();
                     compassImage.setVisibility(View.GONE);
                 }
@@ -175,9 +177,6 @@ public final class NIMapView extends ViewGroup {
                 zoomOut(arg0);
             }
         });
-
-
-        map = new NavinfoMap(this);
     }
 
     @Override
@@ -266,7 +265,15 @@ public final class NIMapView extends ViewGroup {
             cParams = (MarginLayoutParams) childView.getLayoutParams();
 
             int cl = 0, ct = 0, cr = 0, cb = 0;
+
             if (compassImage == childView) {
+
+                int offCompassX = 0, offCompassY = 0;
+                if(map!=null&&map.getCompassPosition()!=null){
+                    offCompassX = map.getCompassPosition().x;
+                    offCompassY = map.getCompassPosition().y;
+                }
+
                 switch (compassGravity) {
                     case LEFT_TOP:
                         cl = cParams.leftMargin + offCompassX;
@@ -288,6 +295,7 @@ public final class NIMapView extends ViewGroup {
                         ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY ;
                         break;
                 }
+
             }else if(zoomInImage==childView){
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
                 ct = zoomPoint.y - cParams.bottomMargin;
@@ -447,6 +455,7 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
+        map.setCompassEnable(true);
     }
 
     /**
@@ -465,6 +474,7 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
+        map.setCompassEnable(false);
     }
 
     /**
@@ -573,4 +583,10 @@ public final class NIMapView extends ViewGroup {
         }
     }
 
+    /**
+     * 获取指北针
+     */
+    protected ImageView getCompassImage() {
+        return compassImage;
+    }
 }
