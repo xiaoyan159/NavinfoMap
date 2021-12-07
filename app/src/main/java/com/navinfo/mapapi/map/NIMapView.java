@@ -4,13 +4,17 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import com.navinfo.mapapi.R;
+import com.navinfo.mapapi.animation.RotateAnimation;
 import org.oscim.android.MapView;
+import org.oscim.core.MapPosition;
+import org.oscim.event.Event;
 import org.oscim.map.Map;
 
 /**
@@ -40,6 +44,16 @@ public final class NIMapView extends ViewGroup {
     private ImageView compassImage;
 
     /**
+     *图片旋转
+     */
+    private RotateAnimation mRotateAnimation;
+
+    /**
+     *之前的旋转角度
+     */
+    private float mLastRotateZ = 0;
+
+    /**
      *缩放按钮
      */
     private ImageView zoomInImage,zoomOutImage;
@@ -58,6 +72,11 @@ public final class NIMapView extends ViewGroup {
      * 缩放按钮位置
      */
     private Point zoomPoint = new Point(1300,1650);
+
+    /**
+     * 比例尺按钮位置
+     */
+    private Point scalePoint = new Point(1300,1650);
 
     /**
      * 根据给定的参数构造一个NIMapView 的新对象。
@@ -105,6 +124,37 @@ public final class NIMapView extends ViewGroup {
         compassImage.setImageResource(R.mipmap.compass);
         ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         addView(compassImage, imageParams);
+
+        mRotateAnimation = new RotateAnimation(compassImage);
+        getVtmMap().events.bind(new Map.UpdateListener() {
+            @Override
+            public void onMapEvent(Event e, MapPosition mapPosition) {
+
+                //旋转
+                if (mLastRotateZ != mapPosition.bearing) {
+                    mRotateAnimation.startRotationZ(mLastRotateZ, mapPosition.bearing);
+                    mLastRotateZ = mapPosition.bearing;
+                }
+
+                //2D,正北隐藏
+                if (compassImage.getVisibility() != View.VISIBLE && (mapPosition.tilt != 0 || mapPosition.bearing != 0)) {
+                    compassImage.setVisibility(View.VISIBLE);
+                } else if (compassImage.getVisibility() == View.VISIBLE && mapPosition.tilt == 0 && mapPosition.bearing == 0) {
+                    compassImage.clearAnimation();
+                    compassImage.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        compassImage.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MapPosition mapPosition = getVtmMap().getMapPosition();
+                mapPosition.setBearing(0);
+                mapPosition.setTilt(0);
+                getVtmMap().animator().animateTo(300, mapPosition);
+            }
+        });
 
         zoomInImage = new ImageView(context);
         zoomInImage.setImageResource(R.drawable.icon_map_zoom_in);
@@ -241,9 +291,16 @@ public final class NIMapView extends ViewGroup {
             }else if(zoomInImage==childView){
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
                 ct = zoomPoint.y - cParams.bottomMargin;
+                Log.e("qj",cHeight+"zoomInImage");
             }else if(zoomOutImage==childView){
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
-                ct = zoomPoint.y - cParams.bottomMargin + 80 + 24;
+                if(zoomInImage!=null){
+                    ct = zoomPoint.y - cParams.bottomMargin + zoomInImage.getMeasuredHeight() + cParams.topMargin + 12;
+                    Log.e("qj",zoomInImage.getMeasuredHeight()+"zoomInImage.getMeasuredHeight()"+ cParams.topMargin);
+                }else{
+                    ct = zoomPoint.y - cParams.bottomMargin + cParams.topMargin + 12;
+                }
+                Log.e("qj",cHeight+"zoomOutImage");
             } else {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
@@ -317,7 +374,7 @@ public final class NIMapView extends ViewGroup {
      * @param view
      */
     public void removeView(View view) {
-
+        super.removeView(view);
     }
 
     /**
@@ -379,6 +436,9 @@ public final class NIMapView extends ViewGroup {
      */
     public void zoomIn(View view) {
         if (view != null) {
+            if(view.isEnabled()){
+                map.zoomIn();
+            }
             view.setEnabled(false);
             view.postDelayed(new Runnable() {
                 @Override
@@ -387,7 +447,6 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
-        map.zoomIn();
     }
 
     /**
@@ -395,6 +454,9 @@ public final class NIMapView extends ViewGroup {
      */
     public void zoomOut(View view) {
         if (view != null) {
+            if(view.isEnabled()){
+                map.zoomOut();
+            }
             view.setEnabled(false);
             view.postDelayed(new Runnable() {
                 @Override
@@ -403,7 +465,6 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
-        map.zoomOut();
     }
 
     /**
@@ -412,7 +473,7 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public Point getScaleControlPosition() {
-        return null;
+        return this.scalePoint;
     }
 
     /**
@@ -442,7 +503,7 @@ public final class NIMapView extends ViewGroup {
      * @param p
      */
     public void setScaleControlPosition(Point p) {
-
+         this.scalePoint = p;
     }
 
 
