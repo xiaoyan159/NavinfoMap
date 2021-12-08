@@ -1,6 +1,7 @@
 package com.navinfo.mapapi.map;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -13,9 +14,15 @@ import android.widget.LinearLayout;
 import com.navinfo.mapapi.R;
 import com.navinfo.mapapi.animation.RotateAnimation;
 import org.oscim.android.MapView;
+import org.oscim.backend.CanvasAdapter;
 import org.oscim.core.MapPosition;
 import org.oscim.event.Event;
 import org.oscim.map.Map;
+import org.oscim.renderer.BitmapRenderer;
+import org.oscim.renderer.GLViewport;
+import org.oscim.scalebar.MapScaleBar;
+import org.oscim.scalebar.MapScaleBarLayer;
+import org.oscim.scalebar.MetricUnitAdapter;
 
 /**
  * 一个显示地图的视图（View）。它负责从服务端获取地图数据。它将会捕捉屏幕触控手势事件
@@ -72,6 +79,16 @@ public final class NIMapView extends ViewGroup {
      * 比例尺按钮位置
      */
     private Point scalePoint = new Point(1300,1650);
+
+    /**
+     * 比例尺显隐控制
+     */
+    private boolean showScaleControl;
+
+    /**
+     * 比例尺图层
+     */
+    private MapScaleBarLayer mapScaleBarLayer;
 
     /**
      * 根据给定的参数构造一个NIMapView 的新对象。
@@ -455,7 +472,9 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
-        map.setCompassEnable(true);
+
+        setScaleControlPosition(new Point(200,1000));
+
     }
 
     /**
@@ -474,7 +493,7 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
-        map.setCompassEnable(false);
+        setScaleControlPosition(new Point(100,100));
     }
 
     /**
@@ -514,6 +533,9 @@ public final class NIMapView extends ViewGroup {
      */
     public void setScaleControlPosition(Point p) {
          this.scalePoint = p;
+         if(this.scalePoint!=null&&mapScaleBarLayer!=null){
+             mapScaleBarLayer.getRenderer().setOffset(this.scalePoint.x,this.scalePoint.y);
+         }
     }
 
 
@@ -544,7 +566,7 @@ public final class NIMapView extends ViewGroup {
      */
     public boolean isShowScaleControl() {
 
-        return false;
+        return showScaleControl;
     }
 
 
@@ -564,7 +586,24 @@ public final class NIMapView extends ViewGroup {
      * @param show
      */
     public void showScaleControl(boolean show) {
-
+         this.showScaleControl = show;
+         if(show){
+             if(mapScaleBarLayer==null){
+                 CustomMapScaleBar mapScaleBar = new CustomMapScaleBar(getVtmMap());
+                 mapScaleBar.setScaleBarMode(CustomMapScaleBar.ScaleBarMode.SINGLE);
+                 mapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+                 mapScaleBar.setSecondaryDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+                 mapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT); // 设置文字显示位置
+                 mapScaleBarLayer = new MapScaleBarLayer(getVtmMap(), mapScaleBar);
+                 BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
+                 //默认左上角
+                 renderer.setPosition(GLViewport.Position.TOP_LEFT);
+                 renderer.setOffset(25 * CanvasAdapter.getScale(), 60);
+             }
+             getVtmMap().layers().add(mapScaleBarLayer, MapGroupEnum.OTHER_GROUP.ordinal());
+         }else{
+             getVtmMap().layers().remove(mapScaleBarLayer);
+         }
     }
 
 

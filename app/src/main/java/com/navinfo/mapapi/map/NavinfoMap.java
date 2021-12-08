@@ -27,7 +27,7 @@ public class NavinfoMap extends Object {
     /**
      * 指北针显隐
      */
-    private boolean enableCompassImage;
+    private boolean enableCompassImage = true;
 
     /**
      * 指北针位置

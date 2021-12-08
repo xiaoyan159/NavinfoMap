@@ -13,11 +13,16 @@ import android.os.Build;
 import android.content.pm.PackageManager;
 
 import org.oscim.android.canvas.AndroidBitmap;
+import org.oscim.android.theme.AssetsRenderTheme;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;
 import org.oscim.layers.LocationTextureLayer;
 import org.oscim.renderer.LocationCallback;
+import org.oscim.renderer.MapRenderer;
+import org.oscim.theme.IRenderTheme;
+import org.oscim.theme.ThemeFile;
+import org.oscim.theme.ThemeLoader;
 import org.oscim.utils.IOUtils;
 
 import java.io.IOException;
@@ -66,6 +71,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
         niMapView.setZoomControlsPosition(new Point(1400,1400));
         niMapView.showZoomControls(true);
+        niMapView.showScaleControl(true);
     }
 
     @Override
