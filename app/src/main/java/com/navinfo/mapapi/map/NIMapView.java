@@ -20,6 +20,7 @@ import org.oscim.event.Event;
 import org.oscim.map.Map;
 import org.oscim.renderer.BitmapRenderer;
 import org.oscim.renderer.GLViewport;
+import org.oscim.scalebar.DefaultMapScaleBar;
 import org.oscim.scalebar.MapScaleBar;
 import org.oscim.scalebar.MapScaleBarLayer;
 import org.oscim.scalebar.MetricUnitAdapter;
@@ -89,6 +90,11 @@ public final class NIMapView extends ViewGroup {
      * 比例尺图层
      */
     private MapScaleBarLayer mapScaleBarLayer;
+
+    /**
+     * 比例尺
+     */
+    private CustomMapScaleBar mapScaleBar;
 
     /**
      * 根据给定的参数构造一个NIMapView 的新对象。
@@ -472,9 +478,6 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
-
-        setScaleControlPosition(new Point(200,1000));
-
     }
 
     /**
@@ -493,7 +496,6 @@ public final class NIMapView extends ViewGroup {
                 }
             }, 300);
         }
-        setScaleControlPosition(new Point(100,100));
     }
 
     /**
@@ -511,6 +513,8 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public int getScaleControlViewHeight() {
+        if(mapScaleBar!=null)
+            return mapScaleBar.getBitmapHeight();
         return 0;
     }
 
@@ -521,7 +525,8 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public int getScaleControlViewWidth() {
-
+        if(mapScaleBar!=null)
+            return mapScaleBar.getBitmapWidth();
         return 0;
     }
 
@@ -589,7 +594,7 @@ public final class NIMapView extends ViewGroup {
          this.showScaleControl = show;
          if(show){
              if(mapScaleBarLayer==null){
-                 CustomMapScaleBar mapScaleBar = new CustomMapScaleBar(getVtmMap());
+                 mapScaleBar = new CustomMapScaleBar(getVtmMap());
                  mapScaleBar.setScaleBarMode(CustomMapScaleBar.ScaleBarMode.SINGLE);
                  mapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
                  mapScaleBar.setSecondaryDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);

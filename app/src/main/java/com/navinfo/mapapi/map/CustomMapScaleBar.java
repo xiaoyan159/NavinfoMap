@@ -399,4 +399,13 @@ public class CustomMapScaleBar extends MapScaleBar {
     public float getMapLevel() {
         return mapLevel;
     }
+
+    public int getBitmapHeight(){
+
+        return (int) (BITMAP_HEIGHT * scale);
+    }
+
+    public int getBitmapWidth(){
+        return (int) (BITMAP_WIDTH * scale);
+    }
 }
