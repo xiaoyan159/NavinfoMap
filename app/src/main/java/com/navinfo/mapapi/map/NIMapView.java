@@ -1,9 +1,11 @@
 package com.navinfo.mapapi.map;
 
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,10 +14,17 @@ import android.widget.LinearLayout;
 
 import com.navinfo.mapapi.MapManager;
 import com.navinfo.mapapi.R;
+import com.navinfo.mapapi.animation.RotateAnimation;
 import org.oscim.android.MapView;
-import org.oscim.layers.Layer;
 import org.oscim.map.Map;
 import org.oscim.scalebar.MapScaleBarLayer;
+import org.oscim.backend.CanvasAdapter;
+import org.oscim.core.MapPosition;
+import org.oscim.event.Event;
+import org.oscim.renderer.BitmapRenderer;
+import org.oscim.renderer.GLViewport;
+import org.oscim.scalebar.MapScaleBar;
+import org.oscim.scalebar.MetricUnitAdapter;
 
 /**
  * 一个显示地图的视图（View）。它负责从服务端获取地图数据。它将会捕捉屏幕触控手势事件
@@ -41,7 +50,17 @@ public final class NIMapView extends ViewGroup {
     /**
      *定位图标
      */
-    private ImageView compassImage;
+    protected ImageView compassImage;
+
+    /**
+     *图片旋转
+     */
+    private RotateAnimation mRotateAnimation;
+
+    /**
+     *之前的旋转角度
+     */
+    private float mLastRotateZ = 0;
 
     /**
      *缩放按钮
@@ -54,14 +73,29 @@ public final class NIMapView extends ViewGroup {
     private COMPASS_GRAVITY compassGravity = COMPASS_GRAVITY.LEFT_TOP;
 
     /**
-     * 偏移位置
-     */
-    private int offCompassX = 0, offCompassY = 0;
-
-    /**
      * 缩放按钮位置
      */
     private Point zoomPoint = new Point(1300,1650);
+
+    /**
+     * 比例尺按钮位置
+     */
+    private Point scalePoint = new Point(1300,1650);
+
+    /**
+     * 比例尺显隐控制
+     */
+    private boolean showScaleControl;
+
+    /**
+     * 比例尺图层
+     */
+    private MapScaleBarLayer mapScaleBarLayer;
+
+    /**
+     * 比例尺
+     */
+    private CustomMapScaleBar mapScaleBar;
 
     /**
      * 根据给定的参数构造一个NIMapView 的新对象。
@@ -104,14 +138,52 @@ public final class NIMapView extends ViewGroup {
         super(context, attrs, defStyleAttr, defStyleRes);
         ViewGroup.LayoutParams layoutParams = new MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         mapView = new MapView(context);
+        map = new NavinfoMap(this);
         addView(mapView, layoutParams);
         compassImage = new ImageView(context);
         compassImage.setImageResource(R.mipmap.compass);
         ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         addView(compassImage, imageParams);
 
+        mRotateAnimation = new RotateAnimation(compassImage);
+        getVtmMap().events.bind(new Map.UpdateListener() {
+            @Override
+            public void onMapEvent(Event e, MapPosition mapPosition) {
+
+                //旋转
+                if (mLastRotateZ != mapPosition.bearing) {
+                    mRotateAnimation.startRotationZ(mLastRotateZ, mapPosition.bearing);
+                    mLastRotateZ = mapPosition.bearing;
+                }
+
+                //增加控制联动效果
+                if(map!=null&&map.isEnableCompassImage()){
+                    //2D,正北隐藏
+                    if (compassImage.getVisibility() != View.VISIBLE && (mapPosition.tilt != 0 || mapPosition.bearing != 0)) {
+                        compassImage.setVisibility(View.VISIBLE);
+                    } else if (compassImage.getVisibility() == View.VISIBLE && mapPosition.tilt == 0 && mapPosition.bearing == 0) {
+                        compassImage.clearAnimation();
+                        compassImage.setVisibility(View.GONE);
+                    }
+                }else{
+                    compassImage.clearAnimation();
+                    compassImage.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        compassImage.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MapPosition mapPosition = getVtmMap().getMapPosition();
+                mapPosition.setBearing(0);
+                mapPosition.setTilt(0);
+                getVtmMap().animator().animateTo(300, mapPosition);
+            }
+        });
+
         zoomInImage = new ImageView(context);
-        zoomInImage.setImageResource(R.drawable.icon_zoom_in);
+        zoomInImage.setImageResource(R.drawable.icon_map_zoom_in);
         zoomInImage.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -125,21 +197,19 @@ public final class NIMapView extends ViewGroup {
 
                 NaviMapScaleBar naviMapScaleBar = MapManager.getInstance().getNaviMapScaleBar();
 
+                zoomIn(arg0);
             }
         });
-        addView(zoomInImage, imageParams);
 
         zoomOutImage = new ImageView(context);
-        zoomOutImage.setImageResource(R.drawable.icon_zoom_out);
+        zoomOutImage.setImageResource(R.drawable.icon_map_zoom_out);
         zoomOutImage.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
+                zoomOut(arg0);
             }
         });
-        addView(zoomOutImage, imageParams);
-
-        map = new NavinfoMap(this);
     }
 
     @Override
@@ -228,7 +298,15 @@ public final class NIMapView extends ViewGroup {
             cParams = (MarginLayoutParams) childView.getLayoutParams();
 
             int cl = 0, ct = 0, cr = 0, cb = 0;
+
             if (compassImage == childView) {
+
+                int offCompassX = 0, offCompassY = 0;
+                if(map!=null&&map.getCompassPosition()!=null){
+                    offCompassX = map.getCompassPosition().x;
+                    offCompassY = map.getCompassPosition().y;
+                }
+
                 switch (compassGravity) {
                     case LEFT_TOP:
                         cl = cParams.leftMargin + offCompassX;
@@ -250,12 +328,20 @@ public final class NIMapView extends ViewGroup {
                         ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY ;
                         break;
                 }
+
             }else if(zoomInImage==childView){
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
                 ct = zoomPoint.y - cParams.bottomMargin;
+                Log.e("qj",cHeight+"zoomInImage");
             }else if(zoomOutImage==childView){
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
-                ct = zoomPoint.y - cParams.bottomMargin + cHeight + 10;
+                if(zoomInImage!=null){
+                    ct = zoomPoint.y - cParams.bottomMargin + zoomInImage.getMeasuredHeight() + cParams.topMargin + 12;
+                    Log.e("qj",zoomInImage.getMeasuredHeight()+"zoomInImage.getMeasuredHeight()"+ cParams.topMargin);
+                }else{
+                    ct = zoomPoint.y - cParams.bottomMargin + cParams.topMargin + 12;
+                }
+                Log.e("qj",cHeight+"zoomOutImage");
             } else {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
@@ -329,7 +415,7 @@ public final class NIMapView extends ViewGroup {
      * @param view
      */
     public void removeView(View view) {
-
+        super.removeView(view);
     }
 
     /**
@@ -387,12 +473,48 @@ public final class NIMapView extends ViewGroup {
     }
 
     /**
+     * @param view
+     */
+    public void zoomIn(View view) {
+        if (view != null) {
+            if(view.isEnabled()){
+                map.zoomIn(true);
+            }
+            view.setEnabled(false);
+            view.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    view.setEnabled(true);
+                }
+            }, 300);
+        }
+    }
+
+    /**
+     * @param view
+     */
+    public void zoomOut(View view) {
+        if (view != null) {
+            if(view.isEnabled()){
+                map.zoomOut(true);
+            }
+            view.setEnabled(false);
+            view.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    view.setEnabled(true);
+                }
+            }, 300);
+        }
+    }
+
+    /**
      * 获取比例尺控件对应的屏幕位置
      *
      * @return
      */
     public Point getScaleControlPosition() {
-        return null;
+        return this.scalePoint;
     }
 
     /**
@@ -401,6 +523,8 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public int getScaleControlViewHeight() {
+        if(mapScaleBar!=null)
+            return mapScaleBar.getBitmapHeight();
         return 0;
     }
 
@@ -411,7 +535,8 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public int getScaleControlViewWidth() {
-
+        if(mapScaleBar!=null)
+            return mapScaleBar.getBitmapWidth();
         return 0;
     }
 
@@ -422,7 +547,10 @@ public final class NIMapView extends ViewGroup {
      * @param p
      */
     public void setScaleControlPosition(Point p) {
-
+         this.scalePoint = p;
+         if(this.scalePoint!=null&&mapScaleBarLayer!=null){
+             mapScaleBarLayer.getRenderer().setOffset(this.scalePoint.x,this.scalePoint.y);
+         }
     }
 
 
@@ -453,7 +581,7 @@ public final class NIMapView extends ViewGroup {
      */
     public boolean isShowScaleControl() {
 
-        return false;
+        return showScaleControl;
     }
 
 
@@ -473,7 +601,24 @@ public final class NIMapView extends ViewGroup {
      * @param show
      */
     public void showScaleControl(boolean show) {
-
+         this.showScaleControl = show;
+         if(show){
+             if(mapScaleBarLayer==null){
+                 mapScaleBar = new CustomMapScaleBar(getVtmMap());
+                 mapScaleBar.setScaleBarMode(CustomMapScaleBar.ScaleBarMode.SINGLE);
+                 mapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+                 mapScaleBar.setSecondaryDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+                 mapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT); // 设置文字显示位置
+                 mapScaleBarLayer = new MapScaleBarLayer(getVtmMap(), mapScaleBar);
+                 BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
+                 //默认左上角
+                 renderer.setPosition(GLViewport.Position.TOP_LEFT);
+                 renderer.setOffset(25 * CanvasAdapter.getScale(), 60);
+             }
+             getVtmMap().layers().add(mapScaleBarLayer, MapGroupEnum.OTHER_GROUP.ordinal());
+         }else{
+             getVtmMap().layers().remove(mapScaleBarLayer);
+         }
     }
 
 
@@ -482,7 +627,20 @@ public final class NIMapView extends ViewGroup {
      * @param show
      */
     public void showZoomControls(boolean show) {
-
+        if(show){
+            ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+            addView(zoomOutImage, imageParams);
+            addView(zoomInImage, imageParams);
+        }else{
+            removeView(zoomInImage);
+            removeView(zoomOutImage);
+        }
     }
 
+    /**
+     * 获取指北针
+     */
+    protected ImageView getCompassImage() {
+        return compassImage;
+    }
 }

@@ -2,8 +2,6 @@ package com.navinfo.mapapi.database.dao;
 
 import android.graphics.Interpolator;
 
-import com.navinfo.mapapi.animation.Animation;
-
 /**
  * 数据库操作
  */

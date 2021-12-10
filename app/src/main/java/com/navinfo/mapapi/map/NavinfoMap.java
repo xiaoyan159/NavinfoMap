@@ -1,11 +1,14 @@
 package com.navinfo.mapapi.map;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
 
+import org.oscim.core.MapPosition;
 import org.oscim.map.Map;
 
 /**
@@ -18,9 +21,19 @@ public class NavinfoMap extends Object {
      */
     Map map;
     /**
-     *
+     * 地图控件
      */
     NIMapView mMapView;
+    /**
+     * 指北针显隐
+     */
+    private boolean enableCompassImage = true;
+
+    /**
+     * 指北针位置
+     */
+    private Point compassPoint;
+
     /**
      * 构造函数
      */
@@ -135,7 +148,7 @@ public class NavinfoMap extends Object {
      */
     public android.graphics.Point getCompassPosition() {
 
-        return null;
+        return compassPoint;
     }
 
     /**
@@ -287,7 +300,20 @@ public class NavinfoMap extends Object {
      * @param enable
      */
     public void setCompassEnable(boolean enable) {
+        this.enableCompassImage = enable;
+        if (mMapView != null && mMapView.getCompassImage() != null) {
+            mMapView.getCompassImage().setVisibility(enable ? View.VISIBLE : View.GONE);
+            mMapView.getCompassImage().setEnabled(enable);
+        }
+    }
 
+    /**
+     * 获取指北针显隐控制
+     *
+     * @return true 显示 false 隐藏
+     */
+    public boolean isEnableCompassImage() {
+        return enableCompassImage;
     }
 
     /**
@@ -296,7 +322,9 @@ public class NavinfoMap extends Object {
      * @param icon
      */
     public void setCompassIcon(Bitmap icon) {
-
+        if (mMapView != null && mMapView.getCompassImage() != null) {
+            mMapView.getCompassImage().setImageBitmap(icon);
+        }
     }
 
 
@@ -306,7 +334,7 @@ public class NavinfoMap extends Object {
      * @param p
      */
     public void setCompassPosition(android.graphics.Point p) {
-
+        this.compassPoint = p;
     }
 
     /**
@@ -354,6 +382,36 @@ public class NavinfoMap extends Object {
      */
     public void setMaxAndMinZoomLevel(float max, float min) {
 
+    }
+
+    /**
+     * 放大
+     * @param animate 是否动画过渡
+     */
+    public void zoomIn(boolean animate) {
+        MapPosition mapPosition = map.getMapPosition();
+        mapPosition.setZoom(mapPosition.getZoom()+1);
+        if (animate) {
+//            map.animator().animateZoom(300, 2, 0.5f, 0.5f);
+            map.animator().animateTo(mapPosition);
+        } else {
+            map.setMapPosition(mapPosition);
+        }
+    }
+
+    /**
+     * 缩小地图
+     * @param animate 是否动画过渡
+     */
+    public void zoomOut(boolean animate) {
+        MapPosition mapPosition = map.getMapPosition();
+        mapPosition.setZoom(mapPosition.getZoom()-1);
+        if (animate) {
+//            map.animator().animateZoom(300, 0.5, 0.5f, 0.5f);
+            map.animator().animateTo(mapPosition);
+        } else {
+            map.setMapPosition(mapPosition);
+        }
     }
 
     /**
