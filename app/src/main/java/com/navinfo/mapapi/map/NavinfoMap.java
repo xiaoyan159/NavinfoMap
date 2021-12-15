@@ -1,11 +1,56 @@
 package com.navinfo.mapapi.map;
 
 import android.graphics.Bitmap;
+import android.graphics.Point;
+import android.view.MotionEvent;
+import android.view.View;
+
+import com.navinfo.mapapi.model.LatLng;
+import com.navinfo.mapapi.model.LatLngBounds;
+
+import org.oscim.core.MapPosition;
+import org.oscim.map.Map;
 
 /**
  * 定义 NavinfoMap 地图对象的操作方法与接口
  */
 public class NavinfoMap extends Object {
+
+    /**
+     *
+     */
+    Map map;
+    /**
+     * 地图控件
+     */
+    NIMapView mMapView;
+    /**
+     * 指北针显隐
+     */
+    private boolean enableCompassImage = true;
+
+    /**
+     * 指北针位置
+     */
+    private Point compassPoint;
+
+    /**
+     * 构造函数
+     */
+    public NavinfoMap(NIMapView niMapView) {
+        this.mMapView = niMapView;
+        this.map = niMapView.getVtmMap();
+    }
+
+    /**
+     * 获取地图的当前状态
+     *
+     * @return
+     */
+    public Map getVtmMap() {
+
+        return map;
+    }
 
     /**
      * 向地图添加一个 Overlay
@@ -15,6 +60,7 @@ public class NavinfoMap extends Object {
      */
     public Overlay addOverlay(OverlayOptions options) {
 
+        return null;
     }
 
     /**
@@ -25,6 +71,7 @@ public class NavinfoMap extends Object {
      */
     public java.util.List<Overlay> addOverlays(java.util.List<OverlayOptions> options) {
 
+        return null;
     }
 
 
@@ -36,6 +83,7 @@ public class NavinfoMap extends Object {
      */
     public TileOverlay addTileLayer(TileOverlayOptions overlayOptions) {
 
+        return null;
     }
 
 
@@ -90,7 +138,7 @@ public class NavinfoMap extends Object {
      * @return
      */
     public java.util.List<InfoWindow> getAllInfoWindows() {
-
+        return null;
     }
 
     /**
@@ -100,7 +148,7 @@ public class NavinfoMap extends Object {
      */
     public android.graphics.Point getCompassPosition() {
 
-        return null;
+        return compassPoint;
     }
 
     /**
@@ -159,7 +207,7 @@ public class NavinfoMap extends Object {
      */
     public float getMaxZoomLevel() {
 
-        return 0;
+        return map.viewport().getMaxZoomLevel();
     }
 
     /**
@@ -169,7 +217,7 @@ public class NavinfoMap extends Object {
      */
     public float getMinZoomLevel() {
 
-        return 0;
+        return map.viewport().getMinZoomLevel();
     }
 
     /**
@@ -252,7 +300,20 @@ public class NavinfoMap extends Object {
      * @param enable
      */
     public void setCompassEnable(boolean enable) {
+        this.enableCompassImage = enable;
+        if (mMapView != null && mMapView.getCompassImage() != null) {
+            mMapView.getCompassImage().setVisibility(enable ? View.VISIBLE : View.GONE);
+            mMapView.getCompassImage().setEnabled(enable);
+        }
+    }
 
+    /**
+     * 获取指北针显隐控制
+     *
+     * @return true 显示 false 隐藏
+     */
+    public boolean isEnableCompassImage() {
+        return enableCompassImage;
     }
 
     /**
@@ -261,7 +322,9 @@ public class NavinfoMap extends Object {
      * @param icon
      */
     public void setCompassIcon(Bitmap icon) {
-
+        if (mMapView != null && mMapView.getCompassImage() != null) {
+            mMapView.getCompassImage().setImageBitmap(icon);
+        }
     }
 
 
@@ -271,7 +334,7 @@ public class NavinfoMap extends Object {
      * @param p
      */
     public void setCompassPosition(android.graphics.Point p) {
-
+        this.compassPoint = p;
     }
 
     /**
@@ -317,8 +380,39 @@ public class NavinfoMap extends Object {
      * @param max
      * @param min
      */
-    public void setMaxAndMinZoomLevel(float max, float min) {
+    public void setMaxAndMinZoomLevel(int max, int min) {
+        map.viewport().setMaxZoomLevel(max);
+        map.viewport().setMinZoomLevel(min);
+    }
 
+    /**
+     * 放大
+     * @param animate 是否动画过渡
+     */
+    public void zoomIn(boolean animate) {
+        MapPosition mapPosition = map.getMapPosition();
+        mapPosition.setZoom(mapPosition.getZoom()+1);
+        if (animate) {
+//            map.animator().animateZoom(300, 2, 0.5f, 0.5f);
+            map.animator().animateTo(mapPosition);
+        } else {
+            map.setMapPosition(mapPosition);
+        }
+    }
+
+    /**
+     * 缩小地图
+     * @param animate 是否动画过渡
+     */
+    public void zoomOut(boolean animate) {
+        MapPosition mapPosition = map.getMapPosition();
+        mapPosition.setZoom(mapPosition.getZoom()-1);
+        if (animate) {
+//            map.animator().animateZoom(300, 0.5, 0.5f, 0.5f);
+            map.animator().animateTo(mapPosition);
+        } else {
+            map.setMapPosition(mapPosition);
+        }
     }
 
     /**
@@ -347,7 +441,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapClickListener(OnMapClickListener listener) {
-
+        mMapView.setOnMapClickListener(listener);
     }
 
     /**
@@ -356,7 +450,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapDoubleClickListener(OnMapDoubleClickListener listener) {
-
+        mMapView.setOnMapDoubleClickListener(listener);
     }
 
 
@@ -384,7 +478,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapLongClickListener(OnMapLongClickListener listener) {
-
+        mMapView.setOnMapLongClickListener(listener);
     }
 
     /**
@@ -410,7 +504,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapTouchListener(OnMapTouchListener listener) {
-
+        mMapView.setOnMapTouchListener(listener);
     }
 
     /**
@@ -419,6 +513,108 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMarkerClickListener(OnMarkerClickListener listener) {
+
+    }
+
+    /**
+     * 设置 Marker 拖拽事件监听者
+     *
+     * @param listener
+     */
+    public void setOnMarkerDragListener(OnMarkerDragListener listener) {
+
+    }
+
+    /**
+     * 设置地图 MultiPoint 覆盖物点击事件监听者
+     *
+     * @param listener
+     */
+    public void setOnMultiPointClickListener(OnMultiPointClickListener listener) {
+
+    }
+
+    /**
+     * 设置定位图标点击事件监听者
+     *
+     * @param listener
+     */
+    public void setOnMyLocationClickListener(OnMyLocationClickListener listener) {
+
+    }
+
+
+    /**
+     * 设置地图 Polyline 覆盖物点击事件监听者
+     *
+     * @param listener
+     */
+    public void setOnPolylineClickListener(OnPolylineClickListener listener) {
+
+    }
+
+
+    /**
+     * 设置地图上控件与地图边界的距离，包含比例尺、缩放控件、logo、指南针的位置 只有在 OnMapLoadedCallback.onMapLoaded() 之后设置才生效
+     *
+     * @param left
+     * @param top
+     * @param right
+     * @param bottom
+     */
+    public void setViewPadding(int left, int top, int right, int bottom) {
+
+    }
+
+    /**
+     * 显示 InfoWindow, 该接口会先隐藏其他已添加的InfoWindow, 再添加新的InfoWindow
+     *
+     * @param infoWindow
+     */
+    public void showInfoWindow(InfoWindow infoWindow) {
+
+    }
+
+    /**
+     * 显示 InfoWindow, 该接口可以设置是否在添加InfoWindow之前，先隐藏其他已经添加的InfoWindow.
+     *
+     * @param infoWindow
+     * @param isHideOthers
+     */
+    public void showInfoWindow(InfoWindow infoWindow, boolean isHideOthers) {
+
+    }
+
+    /**
+     * @param infoWindowList
+     */
+    public void showInfoWindows(java.util.List<InfoWindow> infoWindowList) {
+
+    }
+
+    /**
+     * 控制是否显示底图默认标注, 默认显示
+     *
+     * @param isShow
+     */
+    public void showMapPoi(boolean isShow) {
+
+    }
+
+    /**
+     * @param callback
+     */
+    public void snapshot(SnapshotReadyCallback callback) {
+
+    }
+
+    /**
+     * 切换指定图层的顺序
+     *
+     * @param srcLayer
+     * @param destLayer
+     */
+    public void switchLayerOrder(MapLayer srcLayer, MapLayer destLayer) {
 
     }
 
@@ -560,5 +756,89 @@ public class NavinfoMap extends Object {
          * @return
          */
         boolean onMarkerClick(Marker marker);
+    }
+
+    /**
+     * 地图 Marker 覆盖物拖拽事件监听接口
+     */
+    public static interface OnMarkerDragListener {
+
+        /**
+         * Marker 被拖拽的过程中。
+         *
+         * @param marker
+         */
+        void onMarkerDrag(Marker marker);
+
+        /**
+         * Marker 拖拽结束
+         *
+         * @param marker
+         */
+        void onMarkerDragEnd(Marker marker);
+
+        /**
+         * 开始拖拽 Marker
+         *
+         * @param marker
+         */
+        void onMarkerDragStart(Marker marker);
+
+    }
+
+    /**
+     * 地图MultiPoint覆盖物点击事件监听接口
+     */
+    public static interface OnMultiPointClickListener {
+
+        /**
+         * 地图 MultiPoint 覆盖物点击事件监听函数
+         *
+         * @param multiPoint
+         * @param multiPointItem
+         * @return
+         */
+        boolean onMultiPointClick(MultiPoint multiPoint, MultiPointItem multiPointItem);
+    }
+
+    /**
+     * 地图定位图标点击事件监听接口
+     */
+    public static interface OnMyLocationClickListener {
+
+        /**
+         * 地图定位图标点击事件监听函数
+         *
+         * @return
+         */
+        boolean onMyLocationClick();
+
+    }
+
+    /**
+     * 地图polyline覆盖物点击事件监听接口
+     */
+    public static interface OnPolylineClickListener {
+
+        /**
+         * 地图 Polyline 覆盖物点击事件监听函数
+         *
+         * @param polyline
+         * @return
+         */
+        boolean onPolylineClick(Polyline polyline);
+    }
+
+    /**
+     * 地图截屏回调接口
+     */
+    public static interface SnapshotReadyCallback {
+        /**
+         * 地图截屏回调接口
+         *
+         * @param snapshot
+         */
+        void onSnapshotReady(Bitmap snapshot);
+
     }
 }

@@ -12,22 +12,22 @@ public class DataBaseImpl extends DataBase {
 
     @Override
     public void insert() {
-        super.insert();
+
     }
 
     @Override
     public void update() {
-        super.update();
+
     }
 
     @Override
     public void find() {
-        super.find();
+
     }
 
     @Override
     public void delete() {
-        super.delete();
+
     }
 
     @Override
