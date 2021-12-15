@@ -9,11 +9,13 @@ import android.util.Log;
 import android.view.View;
 
 import com.navinfo.mapapi.map.NIMapView;
+import com.navinfo.mapapi.map.NaviMapScaleBar;
 import com.navinfo.mapapi.map.NavinfoMap;
 import com.navinfo.mapapi.map.source.NavinfoMapRastorTileSource;
 import com.navinfo.mapapi.map.source.NavinfoMultiMapFileTileSource;
 import com.navinfo.mapapi.map.source.SMapRastorTileSource;
 
+import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.canvas.Bitmap;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
@@ -27,6 +29,11 @@ import org.oscim.layers.tile.bitmap.BitmapTileLayer;
 import org.oscim.layers.tile.buildings.BuildingLayer;
 import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.tile.vector.labeling.LabelLayer;
+import org.oscim.renderer.BitmapRenderer;
+import org.oscim.renderer.GLViewport;
+import org.oscim.scalebar.MapScaleBar;
+import org.oscim.scalebar.MapScaleBarLayer;
+import org.oscim.scalebar.MetricUnitAdapter;
 import org.oscim.theme.VtmThemes;
 import org.oscim.tiling.source.mapfile.MapFileTileSource;
 
@@ -71,6 +78,7 @@ public class MapManager {
     private String filePath = dir + "/maps/";
     protected GroupLayer baseGroupLayer; // 用于盛放所有基础底图的图层组，便于统一管理
     private Layer otherBaseLayer;
+    private NaviMapScaleBar naviMapScaleBar; // 地图比例尺控件
 
     /**
      * 单例方法
@@ -113,6 +121,12 @@ public class MapManager {
      * 初始化基础底图，自动遍历map文件夹下所有的.map数据加载并显示
      */
     public void initBaseMap() {
+        // 显示地图比例尺
+        if (naviMapScaleBar == null) {
+            naviMapScaleBar = new NaviMapScaleBar(mMapView.getVtmMap());
+            naviMapScaleBar.initScaleBarLayer(GLViewport.Position.BOTTOM_LEFT, 25, 60);
+        }
+
         if (baseGroupLayer == null) {
             baseGroupLayer = new GroupLayer(mMapView.getVtmMap());
             mMapView.getVtmMap().layers().add(baseGroupLayer, MapGroupEnum.BASE_GROUP.ordinal());
@@ -175,6 +189,12 @@ public class MapManager {
         loadTheme(1);
     }
 
+    /**
+     * 获取地图的比例尺控件，可以修改比例尺在地图上的显示位置，文字显示位置，是否为单行显示等
+     * */
+    public NaviMapScaleBar getNaviMapScaleBar() {
+        return naviMapScaleBar;
+    }
 
     private void loadTheme(final int styleId) {
         boolean bHis = false;
@@ -408,10 +428,11 @@ public class MapManager {
 
     public enum MapGroupEnum {
         BASE_GROUP/*基础底图*/, RASTER_GROUP/*栅格图层组*/,
-        VECTOR_GROUP/*矢量图层组*/, TAB_GROUP/*tab图层组*/,
+        VECTOR_GROUP/*矢量图层组*/, TAB_GROUP/*tab数据图层组*/,
         TRACK_GROUP/*轨迹图层组*/, STATION_GROUP/*基站图层组*/,
         DRAW_GROUP/*用户绘制图层组*/, OTHER_GROUP /*其他图层组*/,
         DATA_GROUP/*数据图层组*/, MARKER_GROUP/*Marker图层组*/,
+        OPERATE_GROUP/*操作图层组*/, ALLWAYS_SHOW_GROUP/*常显图层组*/,
     }
 
 }
