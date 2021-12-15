@@ -207,7 +207,7 @@ public class NavinfoMap extends Object {
      */
     public float getMaxZoomLevel() {
 
-        return 0;
+        return map.viewport().getMaxZoomLevel();
     }
 
     /**
@@ -217,7 +217,7 @@ public class NavinfoMap extends Object {
      */
     public float getMinZoomLevel() {
 
-        return 0;
+        return map.viewport().getMinZoomLevel();
     }
 
     /**
@@ -380,26 +380,39 @@ public class NavinfoMap extends Object {
      * @param max
      * @param min
      */
-    public void setMaxAndMinZoomLevel(float max, float min) {
-
+    public void setMaxAndMinZoomLevel(int max, int min) {
+        map.viewport().setMaxZoomLevel(max);
+        map.viewport().setMinZoomLevel(min);
     }
 
     /**
-     * 缩放
+     * 放大
+     * @param animate 是否动画过渡
      */
-    public void zoomIn() {
+    public void zoomIn(boolean animate) {
         MapPosition mapPosition = map.getMapPosition();
-        mapPosition.setZoomLevel(mapPosition.getZoomLevel() + 1);
-        map.setMapPosition(mapPosition);
+        mapPosition.setZoom(mapPosition.getZoom()+1);
+        if (animate) {
+//            map.animator().animateZoom(300, 2, 0.5f, 0.5f);
+            map.animator().animateTo(mapPosition);
+        } else {
+            map.setMapPosition(mapPosition);
+        }
     }
 
     /**
-     * 缩放
+     * 缩小地图
+     * @param animate 是否动画过渡
      */
-    public void zoomOut() {
+    public void zoomOut(boolean animate) {
         MapPosition mapPosition = map.getMapPosition();
-        mapPosition.setZoomLevel(mapPosition.getZoomLevel() - 1);
-        map.setMapPosition(mapPosition);
+        mapPosition.setZoom(mapPosition.getZoom()-1);
+        if (animate) {
+//            map.animator().animateZoom(300, 0.5, 0.5f, 0.5f);
+            map.animator().animateTo(mapPosition);
+        } else {
+            map.setMapPosition(mapPosition);
+        }
     }
 
     /**
@@ -428,7 +441,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapClickListener(OnMapClickListener listener) {
-
+        mMapView.setOnMapClickListener(listener);
     }
 
     /**
@@ -437,7 +450,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapDoubleClickListener(OnMapDoubleClickListener listener) {
-
+        mMapView.setOnMapDoubleClickListener(listener);
     }
 
 
@@ -465,7 +478,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapLongClickListener(OnMapLongClickListener listener) {
-
+        mMapView.setOnMapLongClickListener(listener);
     }
 
     /**
@@ -491,7 +504,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapTouchListener(OnMapTouchListener listener) {
-
+        mMapView.setOnMapTouchListener(listener);
     }
 
     /**

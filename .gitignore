@@ -1,12 +1,7 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+/.idea/*
 .DS_Store
 /build
 /captures
@@ -100,3 +95,5 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+
+/doc/api/

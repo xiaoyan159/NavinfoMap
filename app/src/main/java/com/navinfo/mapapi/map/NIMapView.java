@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -11,18 +12,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+
+import com.navinfo.mapapi.MapManager;
 import com.navinfo.mapapi.R;
 import com.navinfo.mapapi.animation.RotateAnimation;
+import com.navinfo.mapapi.model.LatLng;
+
 import org.oscim.android.MapView;
+import org.oscim.core.GeoPoint;
+import org.oscim.event.Gesture;
+import org.oscim.event.GestureListener;
+import org.oscim.layers.Layer;
+import org.oscim.layers.marker.MarkerItem;
+import org.oscim.map.Map;
+import org.oscim.scalebar.MapScaleBarLayer;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.core.MapPosition;
 import org.oscim.event.Event;
-import org.oscim.map.Map;
 import org.oscim.renderer.BitmapRenderer;
 import org.oscim.renderer.GLViewport;
-import org.oscim.scalebar.DefaultMapScaleBar;
 import org.oscim.scalebar.MapScaleBar;
-import org.oscim.scalebar.MapScaleBarLayer;
 import org.oscim.scalebar.MetricUnitAdapter;
 
 /**
@@ -97,6 +106,30 @@ public final class NIMapView extends ViewGroup {
     private CustomMapScaleBar mapScaleBar;
 
     /**
+     * 地图的单击事件监听
+     * */
+    private NavinfoMap.OnMapClickListener mapClickListener;
+
+    /**
+     * 地图的双击事件监听
+     * */
+    private NavinfoMap.OnMapDoubleClickListener mapDoubleClickListener;
+    /**
+     * 地图的长按事件监听
+     * */
+    private NavinfoMap.OnMapLongClickListener mapLongClickListener;
+
+    /**
+     * 地图的触摸事件
+     * */
+    private NavinfoMap.OnMapTouchListener touchListener;
+
+//    /**
+//     * 地图的状态改变事件
+//     * */
+//    private NavinfoMap.OnMapStatusChangeListener mapStatusChangeListener;
+
+    /**
      * 根据给定的参数构造一个NIMapView 的新对象。
      *
      * @param context
@@ -148,7 +181,6 @@ public final class NIMapView extends ViewGroup {
         getVtmMap().events.bind(new Map.UpdateListener() {
             @Override
             public void onMapEvent(Event e, MapPosition mapPosition) {
-
                 //旋转
                 if (mLastRotateZ != mapPosition.bearing) {
                     mRotateAnimation.startRotationZ(mLastRotateZ, mapPosition.bearing);
@@ -171,6 +203,21 @@ public final class NIMapView extends ViewGroup {
             }
         });
 
+
+        // 增加事件图层
+        MapEventsReceiver mapEventsReceiver = new MapEventsReceiver(getVtmMap());
+        getVtmMap().layers().add(mapEventsReceiver);
+
+        mapView.setOnTouchListener(new OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (touchListener!=null) {
+                    touchListener.onTouch(event);
+                }
+                return false;
+            }
+        });
+
         compassImage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -187,6 +234,15 @@ public final class NIMapView extends ViewGroup {
 
             @Override
             public void onClick(View arg0) {
+//                if (mapView.map().layers()!=null&&!mapView.map().layers().isEmpty()) {
+//                    for (Layer layer : mapView.map().layers()) {
+//                        if (layer instanceof MapScaleBarLayer) {
+//                        }
+//                    }
+//                }
+
+                NaviMapScaleBar naviMapScaleBar = MapManager.getInstance().getNaviMapScaleBar();
+
                 zoomIn(arg0);
             }
         });
@@ -468,7 +524,7 @@ public final class NIMapView extends ViewGroup {
     public void zoomIn(View view) {
         if (view != null) {
             if(view.isEnabled()){
-                map.zoomIn();
+                map.zoomIn(true);
             }
             view.setEnabled(false);
             view.postDelayed(new Runnable() {
@@ -486,7 +542,7 @@ public final class NIMapView extends ViewGroup {
     public void zoomOut(View view) {
         if (view != null) {
             if(view.isEnabled()){
-                map.zoomOut();
+                map.zoomOut(true);
             }
             view.setEnabled(false);
             view.postDelayed(new Runnable() {
@@ -497,6 +553,48 @@ public final class NIMapView extends ViewGroup {
             }, 300);
         }
     }
+
+    /**
+     * 设置地图的点击事件
+     * */
+    public void setOnMapClickListener(NavinfoMap.OnMapClickListener listener) {
+        this.mapClickListener = listener;
+    }
+
+    /**
+     * 设置地图的双击事件
+     * 注：默认情况下，双击会自动放大地图
+     * */
+    public void setOnMapDoubleClickListener(NavinfoMap.OnMapDoubleClickListener listener) {
+        this.mapDoubleClickListener = listener;
+    }
+
+    /**
+     * 设置地图长按事件
+     *
+     * @param listener
+     */
+    public void setOnMapLongClickListener(NavinfoMap.OnMapLongClickListener listener) {
+        this.mapLongClickListener = listener;
+    }
+
+    /**
+     * 设置地图的触摸事件
+     * @param listener
+     */
+    public void setOnMapTouchListener(NavinfoMap.OnMapTouchListener listener) {
+        this.touchListener = listener;
+    }
+
+
+//    /**
+//     * 设置地图状态监听者
+//     *
+//     * @param listener
+//     */
+//    public void setOnMapStatusChangeListener(NavinfoMap.OnMapStatusChangeListener listener) {
+//        this.mapStatusChangeListener = listener;
+//    }
 
     /**
      * 获取比例尺控件对应的屏幕位置
@@ -632,5 +730,33 @@ public final class NIMapView extends ViewGroup {
      */
     protected ImageView getCompassImage() {
         return compassImage;
+    }
+
+
+    // 地图点击事件对应的图层
+    private class MapEventsReceiver extends Layer implements GestureListener {
+
+        public MapEventsReceiver(Map map) {
+            super(map);
+        }
+
+        @Override
+        public boolean onGesture(Gesture g, org.oscim.event.MotionEvent e) {
+            GeoPoint geoPoint = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
+            if (g instanceof Gesture.Tap) { // 单击事件
+                if (mapClickListener!=null) {
+                    mapClickListener.onMapClick(new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
+                }
+            } else if (g instanceof Gesture.DoubleTap) { // 双击
+                if (mapDoubleClickListener!=null) {
+                    mapDoubleClickListener.onMapDoubleClick(new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
+                }
+            } else if (g instanceof Gesture.LongPress) { // 长按
+                if (mapLongClickListener!=null) {
+                    mapLongClickListener.onMapLongClick(new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
+                }
+            }
+            return false;
+        }
     }
 }
