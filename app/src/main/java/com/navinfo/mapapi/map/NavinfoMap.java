@@ -207,7 +207,7 @@ public class NavinfoMap extends Object {
      */
     public float getMaxZoomLevel() {
 
-        return 0;
+        return map.viewport().getMaxZoomLevel();
     }
 
     /**
@@ -217,7 +217,7 @@ public class NavinfoMap extends Object {
      */
     public float getMinZoomLevel() {
 
-        return 0;
+        return map.viewport().getMinZoomLevel();
     }
 
     /**
@@ -380,8 +380,9 @@ public class NavinfoMap extends Object {
      * @param max
      * @param min
      */
-    public void setMaxAndMinZoomLevel(float max, float min) {
-
+    public void setMaxAndMinZoomLevel(int max, int min) {
+        map.viewport().setMaxZoomLevel(max);
+        map.viewport().setMinZoomLevel(min);
     }
 
     /**
@@ -440,7 +441,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapClickListener(OnMapClickListener listener) {
-
+        mMapView.setOnMapClickListener(listener);
     }
 
     /**
@@ -449,7 +450,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapDoubleClickListener(OnMapDoubleClickListener listener) {
-
+        mMapView.setOnMapDoubleClickListener(listener);
     }
 
 
@@ -477,7 +478,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapLongClickListener(OnMapLongClickListener listener) {
-
+        mMapView.setOnMapLongClickListener(listener);
     }
 
     /**
@@ -503,7 +504,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMapTouchListener(OnMapTouchListener listener) {
-
+        mMapView.setOnMapTouchListener(listener);
     }
 
     /**
