@@ -335,7 +335,7 @@ public final class NIMapView extends ViewGroup {
             } else {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
-            }
+            }ok
             cr = cl + cWidth;
             cb = cHeight + ct;
             childView.layout(cl, ct, cr, cb);
