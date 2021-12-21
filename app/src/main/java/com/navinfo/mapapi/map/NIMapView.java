@@ -392,34 +392,35 @@ public final class NIMapView extends ViewGroup {
                 }
 
             } else if (logoImage == childView) {
+
                 switch (logoPosition) {
                     case logoPostionCenterBottom:
                         cl = getWidth()/2 - cWidth/2 - cParams.leftMargin
-                                - cParams.rightMargin - offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                                - cParams.rightMargin;
+                        ct = getHeight() - cHeight - cParams.bottomMargin;
                         break;
                     case logoPostionCenterTop:
                         cl = getWidth()/2 - cWidth/2 - cParams.leftMargin
-                                - cParams.rightMargin - offCompassX;
-                        ct = cParams.topMargin + offCompassY;
+                                - cParams.rightMargin;
+                        ct = cParams.topMargin;
                         break;
                     case logoPostionleftBottom:
-                        cl = cParams.leftMargin + offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                        cl = cParams.leftMargin;
+                        ct = getHeight() - cHeight - cParams.bottomMargin;
                         break;
                     case logoPostionleftTop:
-                        cl = cParams.leftMargin + offCompassX;
-                        ct = cParams.topMargin + offCompassY;
+                        cl = cParams.leftMargin;
+                        ct = cParams.topMargin;
                         break;
                     case logoPostionRightBottom:
                         cl = getWidth() - cWidth - cParams.leftMargin
-                                - cParams.rightMargin - offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                                - cParams.rightMargin ;
+                        ct = getHeight() - cHeight - cParams.bottomMargin;
                         break;
                     case logoPostionRightTop:
                         cl = getWidth() - cWidth - cParams.leftMargin
-                                - cParams.rightMargin - offCompassX;
-                        ct = cParams.topMargin + offCompassY;
+                                - cParams.rightMargin;
+                        ct = cParams.topMargin ;
                         break;
                 }
                 Log.e("qj", cHeight + "logoImage");
@@ -440,8 +441,7 @@ public final class NIMapView extends ViewGroup {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
             }
-            ok
-                    cr = cl + cWidth;
+            cr = cl + cWidth;
             cb = cHeight + ct;
             childView.layout(cl, ct, cr, cb);
         }
