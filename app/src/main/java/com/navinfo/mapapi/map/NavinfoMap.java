@@ -60,6 +60,11 @@ public class NavinfoMap extends Object {
      */
     public Overlay addOverlay(OverlayOptions options) {
 
+        if(options!=null){
+            if(options instanceof MarkerOptions){
+
+            }
+        }
         return null;
     }
 

@@ -5,12 +5,15 @@ package com.navinfo.mapapi.map;
  */
 public final class Marker extends Overlay {
 
+    /**
+     * 资源图标
+     */
     private BitmapDescriptor bitmapDescriptor;
 
     /**
      * 点击
      */
-    private boolean isClickable;
+    private boolean clickable;
 
     /**
      * 拖拽
@@ -99,7 +102,7 @@ public final class Marker extends Overlay {
      * @return
      */
     boolean isClickable() {
-        return true;
+        return clickable;
     }
 
     /**
@@ -109,7 +112,7 @@ public final class Marker extends Overlay {
      */
     boolean isDraggable() {
 
-        return false;
+        return draggable;
     }
 
     /**
@@ -146,7 +149,7 @@ public final class Marker extends Overlay {
      * @param isClickable
      */
     void setClickable(boolean isClickable) {
-
+        this.clickable = isClickable;
     }
 
     /**
@@ -155,7 +158,7 @@ public final class Marker extends Overlay {
      * @param draggable
      */
     void setDraggable(boolean draggable) {
-
+        this.draggable = draggable;
     }
 
     /**
