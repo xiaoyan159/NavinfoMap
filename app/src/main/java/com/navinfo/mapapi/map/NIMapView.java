@@ -56,24 +56,29 @@ public final class NIMapView extends ViewGroup {
     private NavinfoMap map;
 
     /**
-     *定位图标
+     * 定位图标
      */
     protected ImageView compassImage;
 
     /**
-     *图片旋转
+     * logo图标
+     */
+    protected ImageView logoImage;
+
+    /**
+     * 图片旋转
      */
     private RotateAnimation mRotateAnimation;
 
     /**
-     *之前的旋转角度
+     * 之前的旋转角度
      */
     private float mLastRotateZ = 0;
 
     /**
-     *缩放按钮
+     * 缩放按钮
      */
-    private ImageView zoomInImage,zoomOutImage;
+    private ImageView zoomInImage, zoomOutImage;
 
     /**
      * 定位图标位置
@@ -83,12 +88,17 @@ public final class NIMapView extends ViewGroup {
     /**
      * 缩放按钮位置
      */
-    private Point zoomPoint = new Point(1300,1650);
+    private Point zoomPoint = new Point(1300, 1650);
 
     /**
      * 比例尺按钮位置
      */
-    private Point scalePoint = new Point(1300,1650);
+    private Point scalePoint = new Point(1300, 1650);
+
+    /**
+     * logo位置
+     */
+    private LogoPosition logoPosition = LogoPosition.logoPostionleftBottom;
 
     /**
      * 比例尺显隐控制
@@ -107,21 +117,21 @@ public final class NIMapView extends ViewGroup {
 
     /**
      * 地图的单击事件监听
-     * */
+     */
     private NavinfoMap.OnMapClickListener mapClickListener;
 
     /**
      * 地图的双击事件监听
-     * */
+     */
     private NavinfoMap.OnMapDoubleClickListener mapDoubleClickListener;
     /**
      * 地图的长按事件监听
-     * */
+     */
     private NavinfoMap.OnMapLongClickListener mapLongClickListener;
 
     /**
      * 地图的触摸事件
-     * */
+     */
     private NavinfoMap.OnMapTouchListener touchListener;
 
 //    /**
@@ -135,7 +145,7 @@ public final class NIMapView extends ViewGroup {
      * @param context
      */
     public NIMapView(Context context) {
-        this(context,null);
+        this(context, null);
     }
 
     /**
@@ -161,6 +171,7 @@ public final class NIMapView extends ViewGroup {
 
     /**
      * 根据给定的参数构造一个NIMapView 的新对象。
+     *
      * @param context
      * @param attrs
      * @param defStyleAttr
@@ -177,6 +188,11 @@ public final class NIMapView extends ViewGroup {
         ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         addView(compassImage, imageParams);
 
+        logoImage = new ImageView(context);
+        logoImage.setImageResource(R.mipmap.logo);
+        ViewGroup.LayoutParams logoParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        addView(logoImage, logoParams);
+
         mRotateAnimation = new RotateAnimation(compassImage);
         getVtmMap().events.bind(new Map.UpdateListener() {
             @Override
@@ -188,7 +204,7 @@ public final class NIMapView extends ViewGroup {
                 }
 
                 //增加控制联动效果
-                if(map!=null&&map.isEnableCompassImage()){
+                if (map != null && map.isEnableCompassImage()) {
                     //2D,正北隐藏
                     if (compassImage.getVisibility() != View.VISIBLE && (mapPosition.tilt != 0 || mapPosition.bearing != 0)) {
                         compassImage.setVisibility(View.VISIBLE);
@@ -196,7 +212,7 @@ public final class NIMapView extends ViewGroup {
                         compassImage.clearAnimation();
                         compassImage.setVisibility(View.GONE);
                     }
-                }else{
+                } else {
                     compassImage.clearAnimation();
                     compassImage.setVisibility(View.GONE);
                 }
@@ -211,7 +227,7 @@ public final class NIMapView extends ViewGroup {
         mapView.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                if (touchListener!=null) {
+                if (touchListener != null) {
                     touchListener.onTouch(event);
                 }
                 return false;
@@ -348,7 +364,7 @@ public final class NIMapView extends ViewGroup {
             if (compassImage == childView) {
 
                 int offCompassX = 0, offCompassY = 0;
-                if(map!=null&&map.getCompassPosition()!=null){
+                if (map != null && map.getCompassPosition() != null) {
                     offCompassX = map.getCompassPosition().x;
                     offCompassY = map.getCompassPosition().y;
                 }
@@ -371,28 +387,61 @@ public final class NIMapView extends ViewGroup {
                     case RIGHT_BOTTOM:
                         cl = getWidth() - cWidth - cParams.leftMargin
                                 - cParams.rightMargin - offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY ;
+                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
                         break;
                 }
 
-            }else if(zoomInImage==childView){
+            } else if (logoImage == childView) {
+                switch (logoPosition) {
+                    case logoPostionCenterBottom:
+                        cl = getWidth()/2 - cWidth/2 - cParams.leftMargin
+                                - cParams.rightMargin - offCompassX;
+                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                        break;
+                    case logoPostionCenterTop:
+                        cl = getWidth()/2 - cWidth/2 - cParams.leftMargin
+                                - cParams.rightMargin - offCompassX;
+                        ct = cParams.topMargin + offCompassY;
+                        break;
+                    case logoPostionleftBottom:
+                        cl = cParams.leftMargin + offCompassX;
+                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                        break;
+                    case logoPostionleftTop:
+                        cl = cParams.leftMargin + offCompassX;
+                        ct = cParams.topMargin + offCompassY;
+                        break;
+                    case logoPostionRightBottom:
+                        cl = getWidth() - cWidth - cParams.leftMargin
+                                - cParams.rightMargin - offCompassX;
+                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
+                        break;
+                    case logoPostionRightTop:
+                        cl = getWidth() - cWidth - cParams.leftMargin
+                                - cParams.rightMargin - offCompassX;
+                        ct = cParams.topMargin + offCompassY;
+                        break;
+                }
+                Log.e("qj", cHeight + "logoImage");
+            } else if (zoomInImage == childView) {
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
                 ct = zoomPoint.y - cParams.bottomMargin;
-                Log.e("qj",cHeight+"zoomInImage");
-            }else if(zoomOutImage==childView){
+                Log.e("qj", cHeight + "zoomInImage");
+            } else if (zoomOutImage == childView) {
                 cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
-                if(zoomInImage!=null){
+                if (zoomInImage != null) {
                     ct = zoomPoint.y - cParams.bottomMargin + zoomInImage.getMeasuredHeight() + cParams.topMargin + 12;
-                    Log.e("qj",zoomInImage.getMeasuredHeight()+"zoomInImage.getMeasuredHeight()"+ cParams.topMargin);
-                }else{
+                    Log.e("qj", zoomInImage.getMeasuredHeight() + "zoomInImage.getMeasuredHeight()" + cParams.topMargin);
+                } else {
                     ct = zoomPoint.y - cParams.bottomMargin + cParams.topMargin + 12;
                 }
-                Log.e("qj",cHeight+"zoomOutImage");
+                Log.e("qj", cHeight + "zoomOutImage");
             } else {
                 cl = cParams.leftMargin;
                 ct = cParams.topMargin;
-            }ok
-            cr = cl + cWidth;
+            }
+            ok
+                    cr = cl + cWidth;
             cb = cHeight + ct;
             childView.layout(cl, ct, cr, cb);
         }
@@ -452,7 +501,7 @@ public final class NIMapView extends ViewGroup {
      * @param params
      */
     public void addView(View child, LayoutParams params) {
-        super.addView(child,params);
+        super.addView(child, params);
     }
 
     /**
@@ -471,7 +520,7 @@ public final class NIMapView extends ViewGroup {
      */
     public LogoPosition getLogoPosition() {
 
-        return null;
+        return logoPosition;
     }
 
     /**
@@ -480,7 +529,7 @@ public final class NIMapView extends ViewGroup {
      * @param position
      */
     public void setLogoPosition(LogoPosition position) {
-
+        this.logoPosition = position;
     }
 
 
@@ -500,7 +549,7 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public Map getVtmMap() {
-        if(mapView!=null)
+        if (mapView != null)
             return mapView.map();
         return null;
     }
@@ -512,7 +561,7 @@ public final class NIMapView extends ViewGroup {
      */
     public int getMapLevel() {
 
-        if(mapView!=null&&mapView.map()!=null)
+        if (mapView != null && mapView.map() != null)
             return mapView.map().getMapPosition().getZoomLevel();
 
         return 0;
@@ -523,7 +572,7 @@ public final class NIMapView extends ViewGroup {
      */
     public void zoomIn(View view) {
         if (view != null) {
-            if(view.isEnabled()){
+            if (view.isEnabled()) {
                 map.zoomIn(true);
             }
             view.setEnabled(false);
@@ -541,7 +590,7 @@ public final class NIMapView extends ViewGroup {
      */
     public void zoomOut(View view) {
         if (view != null) {
-            if(view.isEnabled()){
+            if (view.isEnabled()) {
                 map.zoomOut(true);
             }
             view.setEnabled(false);
@@ -556,7 +605,7 @@ public final class NIMapView extends ViewGroup {
 
     /**
      * 设置地图的点击事件
-     * */
+     */
     public void setOnMapClickListener(NavinfoMap.OnMapClickListener listener) {
         this.mapClickListener = listener;
     }
@@ -564,7 +613,7 @@ public final class NIMapView extends ViewGroup {
     /**
      * 设置地图的双击事件
      * 注：默认情况下，双击会自动放大地图
-     * */
+     */
     public void setOnMapDoubleClickListener(NavinfoMap.OnMapDoubleClickListener listener) {
         this.mapDoubleClickListener = listener;
     }
@@ -580,6 +629,7 @@ public final class NIMapView extends ViewGroup {
 
     /**
      * 设置地图的触摸事件
+     *
      * @param listener
      */
     public void setOnMapTouchListener(NavinfoMap.OnMapTouchListener listener) {
@@ -611,7 +661,7 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public int getScaleControlViewHeight() {
-        if(mapScaleBar!=null)
+        if (mapScaleBar != null)
             return mapScaleBar.getBitmapHeight();
         return 0;
     }
@@ -623,7 +673,7 @@ public final class NIMapView extends ViewGroup {
      * @return
      */
     public int getScaleControlViewWidth() {
-        if(mapScaleBar!=null)
+        if (mapScaleBar != null)
             return mapScaleBar.getBitmapWidth();
         return 0;
     }
@@ -635,10 +685,10 @@ public final class NIMapView extends ViewGroup {
      * @param p
      */
     public void setScaleControlPosition(Point p) {
-         this.scalePoint = p;
-         if(this.scalePoint!=null&&mapScaleBarLayer!=null){
-             mapScaleBarLayer.getRenderer().setOffset(this.scalePoint.x,this.scalePoint.y);
-         }
+        this.scalePoint = p;
+        if (this.scalePoint != null && mapScaleBarLayer != null) {
+            mapScaleBarLayer.getRenderer().setOffset(this.scalePoint.x, this.scalePoint.y);
+        }
     }
 
 
@@ -689,37 +739,38 @@ public final class NIMapView extends ViewGroup {
      * @param show
      */
     public void showScaleControl(boolean show) {
-         this.showScaleControl = show;
-         if(show){
-             if(mapScaleBarLayer==null){
-                 mapScaleBar = new CustomMapScaleBar(getVtmMap());
-                 mapScaleBar.setScaleBarMode(CustomMapScaleBar.ScaleBarMode.SINGLE);
-                 mapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
-                 mapScaleBar.setSecondaryDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
-                 mapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT); // 设置文字显示位置
-                 mapScaleBarLayer = new MapScaleBarLayer(getVtmMap(), mapScaleBar);
-                 BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
-                 //默认左上角
-                 renderer.setPosition(GLViewport.Position.TOP_LEFT);
-                 renderer.setOffset(25 * CanvasAdapter.getScale(), 60);
-             }
-             getVtmMap().layers().add(mapScaleBarLayer, MapGroupEnum.OTHER_GROUP.ordinal());
-         }else{
-             getVtmMap().layers().remove(mapScaleBarLayer);
-         }
+        this.showScaleControl = show;
+        if (show) {
+            if (mapScaleBarLayer == null) {
+                mapScaleBar = new CustomMapScaleBar(getVtmMap());
+                mapScaleBar.setScaleBarMode(CustomMapScaleBar.ScaleBarMode.SINGLE);
+                mapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+                mapScaleBar.setSecondaryDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
+                mapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT); // 设置文字显示位置
+                mapScaleBarLayer = new MapScaleBarLayer(getVtmMap(), mapScaleBar);
+                BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
+                //默认左上角
+                renderer.setPosition(GLViewport.Position.TOP_LEFT);
+                renderer.setOffset(25 * CanvasAdapter.getScale(), 60);
+            }
+            getVtmMap().layers().add(mapScaleBarLayer, MapGroupEnum.OTHER_GROUP.ordinal());
+        } else {
+            getVtmMap().layers().remove(mapScaleBarLayer);
+        }
     }
 
 
     /**
      * 设置是否显示缩放控件
+     *
      * @param show
      */
     public void showZoomControls(boolean show) {
-        if(show){
+        if (show) {
             ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
             addView(zoomOutImage, imageParams);
             addView(zoomInImage, imageParams);
-        }else{
+        } else {
             removeView(zoomInImage);
             removeView(zoomOutImage);
         }
@@ -744,15 +795,15 @@ public final class NIMapView extends ViewGroup {
         public boolean onGesture(Gesture g, org.oscim.event.MotionEvent e) {
             GeoPoint geoPoint = mMap.viewport().fromScreenPoint(e.getX(), e.getY());
             if (g instanceof Gesture.Tap) { // 单击事件
-                if (mapClickListener!=null) {
+                if (mapClickListener != null) {
                     mapClickListener.onMapClick(new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
                 }
             } else if (g instanceof Gesture.DoubleTap) { // 双击
-                if (mapDoubleClickListener!=null) {
+                if (mapDoubleClickListener != null) {
                     mapDoubleClickListener.onMapDoubleClick(new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
                 }
             } else if (g instanceof Gesture.LongPress) { // 长按
-                if (mapLongClickListener!=null) {
+                if (mapLongClickListener != null) {
                     mapLongClickListener.onMapLongClick(new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude()));
                 }
             }
