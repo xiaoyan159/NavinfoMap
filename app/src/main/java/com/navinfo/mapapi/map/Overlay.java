@@ -1,9 +1,37 @@
 package com.navinfo.mapapi.map;
 
+import android.graphics.Point;
+import android.os.Bundle;
+
 /**
  * 地图覆盖物基类
  */
 public abstract class Overlay extends java.lang.Object {
+
+    /**
+     * 点击
+     */
+    public boolean clickable;
+
+    /**
+     * marker 是否允许拖拽，默认不可拖拽
+     */
+    public boolean draggable;
+
+    /**
+     * marker 覆盖物的额外信息
+     */
+    public Bundle extraInfo;
+
+    /**
+     * Marker 覆盖物屏幕位置点
+     */
+    public Point point;
+
+    /**
+     * marker 覆盖物的 zIndex
+     */
+    public int zIndex;
 
     protected Overlay() {
     }
@@ -13,34 +41,34 @@ public abstract class Overlay extends java.lang.Object {
      *
      * @return
      */
-    Bundle getExtraInfo();
+    public abstract Bundle getExtraInfo();
 
     /**
      * 获取覆盖物 zIndex
      *
      * @return
      */
-    int getZIndex();
+    public abstract int getZIndex();
 
     /**
      * 获取overlay是否被移除的状态
      *
      * @return
      */
-    boolean isRemoved();
+    public abstract boolean isRemoved();
 
     /**
      * 设置覆盖物可见性
      *
      * @return
      */
-    boolean isVisible();
+    public abstract boolean isVisible();
 
 
     /**
      * 删除该覆盖物
      */
-    void remove();
+    public abstract void remove();
 
 
     /**
@@ -48,7 +76,7 @@ public abstract class Overlay extends java.lang.Object {
      *
      * @param extraInfo
      */
-    void setExtraInfo(Bundle extraInfo);
+    public abstract void setExtraInfo(Bundle extraInfo);
 
 
     /**
@@ -56,7 +84,7 @@ public abstract class Overlay extends java.lang.Object {
      *
      * @param visible
      */
-    void setVisible(boolean visible);
+    public abstract void setVisible(boolean visible);
 
 
     /**
@@ -64,6 +92,6 @@ public abstract class Overlay extends java.lang.Object {
      *
      * @param zIndex
      */
-    void setZIndex(int zIndex);
+    public abstract void setZIndex(int zIndex);
 
 }

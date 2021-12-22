@@ -1,14 +1,63 @@
 package com.navinfo.mapapi.map;
 
+import android.graphics.Point;
+import android.os.Bundle;
+
+import com.navinfo.mapapi.model.LatLng;
+
 /**
  *
  */
 public final class MarkerOptions extends OverlayOptions {
 
     /**
-     * 层级
+     * 点击
+     */
+    private boolean clickable;
+
+    /**
+     * marker 是否允许拖拽，默认不可拖拽
+     */
+    private boolean draggable;
+
+    /**
+     * marker 覆盖物的额外信息
+     */
+    private Bundle extraInfo;
+
+    /**
+     * Marker 覆盖物屏幕位置点
+     */
+    private Point point;
+
+    /**
+     * marker 覆盖物的 zIndex
      */
     private int zIndex;
+
+    /**
+     * Marker 覆盖物的图标
+     */
+    private BitmapDescriptor bitmapDescriptor;
+
+    /**
+     * Marker 绑定的InfoWindow
+     */
+    private InfoWindow infoWindow;
+
+    /**
+     * 覆盖物的位置坐标
+     */
+    private LatLng position;
+
+    /**
+     * 可见性
+     */
+    private boolean visible;
+
+    public MarkerOptions() {
+        super();
+    }
 
     /**
      * 设置Marker是否可点击
@@ -17,8 +66,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions clickable(boolean isClickable) {
-        return null;
-
+        this.clickable = isClickable;
+        return new MarkerOptions();
     }
 
     /**
@@ -28,8 +77,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions draggable(boolean draggable) {
-        return null;
-
+        this.draggable = draggable;
+        return new MarkerOptions();
     }
 
     /**
@@ -39,8 +88,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions extraInfo(Bundle extraInfo) {
-        return null;
-
+        this.extraInfo = extraInfo;
+        return new MarkerOptions();
     }
 
     /**
@@ -50,8 +99,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions fixedScreenPosition(Point point) {
-        return null;
-
+        this.point = point;
+        return new MarkerOptions();
     }
 
 
@@ -61,8 +110,7 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     Bundle getExtraInfo() {
-        return null;
-
+        return this.extraInfo;
     }
 
     /**
@@ -72,7 +120,7 @@ public final class MarkerOptions extends OverlayOptions {
      */
     LatLng getPosition() {
 
-        return null;
+        return this.position;
     }
 
     /**
@@ -81,19 +129,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     BitmapDescriptor getIcon() {
-        return null;
-
+        return this.bitmapDescriptor;
     }
 
-    /**
-     * 获取 marker 覆盖物的位置坐标
-     *
-     * @return
-     */
-    LatLng getPosition() {
-        return null;
-
-    }
 
     /**
      * 获取 marker 覆盖物的 zIndex
@@ -112,8 +150,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions icon(BitmapDescriptor icon) {
-
-        return null;
+        this.bitmapDescriptor = icon;
+        return new MarkerOptions();
     }
 
     /**
@@ -123,8 +161,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions infoWindow(InfoWindow infoWindow) {
-
-        return null;
+        this.infoWindow = infoWindow;
+        return new MarkerOptions();
     }
 
     /**
@@ -134,6 +172,7 @@ public final class MarkerOptions extends OverlayOptions {
      */
     boolean isDraggable() {
 
+        return this.draggable;
     }
 
     /**
@@ -143,6 +182,7 @@ public final class MarkerOptions extends OverlayOptions {
      */
     boolean isVisible() {
 
+        return this.visible;
     }
 
     /**
@@ -152,8 +192,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions position(LatLng position) {
-
-        return null;
+        this.position = position;
+        return new MarkerOptions();
     }
 
     /**
@@ -163,8 +203,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions visible(boolean visible) {
-
-        return null;
+        this.visible = visible;
+        return new MarkerOptions();
     }
 
     /**
@@ -174,8 +214,7 @@ public final class MarkerOptions extends OverlayOptions {
      * @return
      */
     MarkerOptions zIndex(int zIndex) {
-
-        return null;
+        this.zIndex = zIndex;
+        return new MarkerOptions();
     }
-
 }

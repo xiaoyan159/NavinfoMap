@@ -7,7 +7,7 @@ import org.oscim.backend.canvas.Bitmap;
  */
 public class BitmapDescriptor extends java.lang.Object {
 
-    final Bitmap mBitmap;
+    private Bitmap mBitmap;
 
     public BitmapDescriptor(Bitmap mBitmap) {
         this.mBitmap = mBitmap;

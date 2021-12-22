@@ -1,24 +1,42 @@
 package com.navinfo.mapapi.map;
 
+import android.graphics.Point;
+import android.os.Build;
+import android.os.Bundle;
+import android.view.View;
+import com.navinfo.mapapi.model.LatLng;
+
 /**
  * 定义地图 Marker 覆盖物
  */
 public final class Marker extends Overlay {
 
     /**
-     * 资源图标
+     * Marker 覆盖物的图标
      */
     private BitmapDescriptor bitmapDescriptor;
 
     /**
-     * 点击
+     * Marker 绑定的InfoWindow
      */
-    private boolean clickable;
+    private InfoWindow infoWindow;
 
     /**
-     * 拖拽
+     * 覆盖物的位置坐标
      */
-    private boolean draggable;
+    private LatLng position;
+
+    /**
+     * 视图View
+     */
+    private View view;
+
+    /**
+     *
+     */
+    private int yOffset;
+
+
 
     /**
      * 获取 Marker 的屏幕位置
@@ -27,7 +45,7 @@ public final class Marker extends Overlay {
      */
     Point getFixedPosition() {
 
-        return null;
+        return this.point;
     }
 
     /**
@@ -55,7 +73,7 @@ public final class Marker extends Overlay {
      * @return
      */
     InfoWindow getInfoWindow() {
-        return null;
+        return this.infoWindow;
     }
 
     /**
@@ -65,7 +83,7 @@ public final class Marker extends Overlay {
      */
     LatLng getPosition() {
 
-        return null;
+        return this.position;
     }
 
     /**
@@ -176,7 +194,16 @@ public final class Marker extends Overlay {
      * @param position
      */
     void setPosition(LatLng position) {
+        this.position = position;
+    }
 
+    /**
+     * 设置 Marker 覆盖物的Y方向的偏移量
+     *
+     * @param mYOffset
+     */
+    void setYOffset(int mYOffset) {
+        this.yOffset = mYOffset;
     }
 
     /**
@@ -185,7 +212,7 @@ public final class Marker extends Overlay {
      * @param mInfoWindow
      */
     void showInfoWindow(InfoWindow mInfoWindow) {
-
+        this.infoWindow = mInfoWindow;
     }
 
     /**
@@ -203,7 +230,7 @@ public final class Marker extends Overlay {
      * @param view
      */
     void updateInfoWindowView(View view) {
-
+        this.view = view;
     }
 
 
@@ -213,6 +240,46 @@ public final class Marker extends Overlay {
      * @param yOffset
      */
     void updateInfoWindowYOffset(int yOffset) {
+        this.yOffset = yOffset;
+    }
+
+    @Override
+    public Bundle getExtraInfo() {
+        return null;
+    }
+
+    @Override
+    public int getZIndex() {
+        return 0;
+    }
+
+    @Override
+    public boolean isRemoved() {
+        return false;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return false;
+    }
+
+    @Override
+    public void remove() {
+
+    }
+
+    @Override
+    public void setExtraInfo(Bundle extraInfo) {
+
+    }
+
+    @Override
+    public void setVisible(boolean visible) {
+
+    }
+
+    @Override
+    public void setZIndex(int zIndex) {
 
     }
 }
