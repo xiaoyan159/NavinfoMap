@@ -4,13 +4,20 @@ import android.graphics.Point;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+
 import com.navinfo.mapapi.model.LatLng;
+
+import java.util.UUID;
 
 /**
  * 定义地图 Marker 覆盖物
  */
 public final class Marker extends Overlay {
 
+    /**
+     * 位移id
+     */
+    private String id;
     /**
      * Marker 覆盖物的图标
      */
@@ -36,14 +43,17 @@ public final class Marker extends Overlay {
      */
     private int yOffset;
 
-
+    protected Marker() {
+        super();
+        this.id = UUID.randomUUID().toString().replaceAll("-", "");
+    }
 
     /**
      * 获取 Marker 的屏幕位置
      *
      * @return
      */
-    Point getFixedPosition() {
+    public Point getFixedPosition() {
 
         return this.point;
     }
@@ -53,7 +63,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    BitmapDescriptor getIcon() {
+    public BitmapDescriptor getIcon() {
 
         return bitmapDescriptor;
     }
@@ -63,8 +73,8 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    String getId() {
-        return "";
+    public String getId() {
+        return this.id;
     }
 
     /**
@@ -72,7 +82,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    InfoWindow getInfoWindow() {
+    public InfoWindow getInfoWindow() {
         return this.infoWindow;
     }
 
@@ -81,7 +91,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    LatLng getPosition() {
+    public LatLng getPosition() {
 
         return this.position;
     }
@@ -91,7 +101,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    String getTitle() {
+    public String getTitle() {
         return "";
     }
 
@@ -100,7 +110,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    int getYOffset() {
+    public int getYOffset() {
 
         return 0;
     }
@@ -109,7 +119,7 @@ public final class Marker extends Overlay {
      * 移除与 Marker
      * 绑定的InfoWindow
      */
-    void hideInfoWindow() {
+    public void hideInfoWindow() {
 
     }
 
@@ -119,7 +129,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    boolean isClickable() {
+    public boolean isClickable() {
         return clickable;
     }
 
@@ -128,7 +138,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    boolean isDraggable() {
+    public boolean isDraggable() {
 
         return draggable;
     }
@@ -139,7 +149,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    boolean isFixed() {
+    public boolean isFixed() {
         return false;
     }
 
@@ -148,7 +158,7 @@ public final class Marker extends Overlay {
      *
      * @return
      */
-    boolean isInfoWindowEnabled() {
+    public boolean isInfoWindowEnabled() {
         return false;
     }
 
@@ -157,7 +167,7 @@ public final class Marker extends Overlay {
      *
      * @param alpha
      */
-    void setAlpha(float alpha) {
+    public void setAlpha(float alpha) {
 
     }
 
@@ -166,7 +176,7 @@ public final class Marker extends Overlay {
      *
      * @param isClickable
      */
-    void setClickable(boolean isClickable) {
+    public void setClickable(boolean isClickable) {
         this.clickable = isClickable;
     }
 
@@ -175,7 +185,7 @@ public final class Marker extends Overlay {
      *
      * @param draggable
      */
-    void setDraggable(boolean draggable) {
+    public void setDraggable(boolean draggable) {
         this.draggable = draggable;
     }
 
@@ -184,7 +194,7 @@ public final class Marker extends Overlay {
      *
      * @param icon
      */
-    void setIcon(BitmapDescriptor icon) {
+    public void setIcon(BitmapDescriptor icon) {
         this.bitmapDescriptor = icon;
     }
 
@@ -193,7 +203,7 @@ public final class Marker extends Overlay {
      *
      * @param position
      */
-    void setPosition(LatLng position) {
+    public void setPosition(LatLng position) {
         this.position = position;
     }
 
@@ -202,7 +212,7 @@ public final class Marker extends Overlay {
      *
      * @param mYOffset
      */
-    void setYOffset(int mYOffset) {
+    public void setYOffset(int mYOffset) {
         this.yOffset = mYOffset;
     }
 
@@ -211,7 +221,7 @@ public final class Marker extends Overlay {
      *
      * @param mInfoWindow
      */
-    void showInfoWindow(InfoWindow mInfoWindow) {
+    public void showInfoWindow(InfoWindow mInfoWindow) {
         this.infoWindow = mInfoWindow;
     }
 
@@ -220,7 +230,7 @@ public final class Marker extends Overlay {
      *
      * @param position
      */
-    void updateInfoWindowPosition(LatLng position) {
+    public void updateInfoWindowPosition(LatLng position) {
 
     }
 
@@ -229,7 +239,7 @@ public final class Marker extends Overlay {
      *
      * @param view
      */
-    void updateInfoWindowView(View view) {
+    public void updateInfoWindowView(View view) {
         this.view = view;
     }
 
@@ -239,7 +249,7 @@ public final class Marker extends Overlay {
      *
      * @param yOffset
      */
-    void updateInfoWindowYOffset(int yOffset) {
+    public void updateInfoWindowYOffset(int yOffset) {
         this.yOffset = yOffset;
     }
 
@@ -255,31 +265,31 @@ public final class Marker extends Overlay {
 
     @Override
     public boolean isRemoved() {
-        return false;
+        return this.remove;
     }
 
     @Override
     public boolean isVisible() {
-        return false;
+        return this.visible;
     }
 
     @Override
     public void remove() {
-
+        this.remove = true;
     }
 
     @Override
     public void setExtraInfo(Bundle extraInfo) {
-
+        this.extraInfo = extraInfo;
     }
 
     @Override
     public void setVisible(boolean visible) {
-
+        this.visible = visible;
     }
 
     @Override
     public void setZIndex(int zIndex) {
-
+        this.zIndex = zIndex;
     }
 }

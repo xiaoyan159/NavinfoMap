@@ -8,6 +8,8 @@ import android.view.View;
 import androidx.fragment.app.FragmentActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.ViewCompat;
+
+import com.navinfo.mapapi.map.Marker;
 import com.navinfo.mapapi.map.NIMapView;
 import android.os.Build;
 import android.content.pm.PackageManager;

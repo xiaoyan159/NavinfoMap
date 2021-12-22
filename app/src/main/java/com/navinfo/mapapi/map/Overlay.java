@@ -11,27 +11,37 @@ public abstract class Overlay extends java.lang.Object {
     /**
      * 点击
      */
-    public boolean clickable;
+    boolean clickable;
 
     /**
      * marker 是否允许拖拽，默认不可拖拽
      */
-    public boolean draggable;
+    boolean draggable;
 
     /**
      * marker 覆盖物的额外信息
      */
-    public Bundle extraInfo;
+    Bundle extraInfo;
 
     /**
      * Marker 覆盖物屏幕位置点
      */
-    public Point point;
+    Point point;
 
     /**
      * marker 覆盖物的 zIndex
      */
-    public int zIndex;
+    int zIndex;
+
+    /**
+     * 可见性
+     */
+    boolean visible;
+
+    /**
+     * 是否删除
+     */
+    boolean remove;
 
     protected Overlay() {
     }

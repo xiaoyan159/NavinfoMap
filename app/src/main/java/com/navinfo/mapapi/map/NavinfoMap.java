@@ -60,9 +60,15 @@ public class NavinfoMap extends Object {
      */
     public Overlay addOverlay(OverlayOptions options) {
 
-        if(options!=null){
-            if(options instanceof MarkerOptions){
-
+        if (options != null) {
+            if (options instanceof MarkerOptions) {
+                Marker marker = new Marker();
+                marker.setDraggable(((MarkerOptions) options).isDraggable());
+                marker.setExtraInfo(((MarkerOptions) options).getExtraInfo());
+                marker.setIcon(((MarkerOptions) options).getIcon());
+                marker.setPosition(((MarkerOptions) options).getPosition());
+                marker.setVisible(((MarkerOptions) options).isVisible());
+                marker.setZIndex(((MarkerOptions) options).getZIndex());
             }
         }
         return null;
@@ -392,11 +398,12 @@ public class NavinfoMap extends Object {
 
     /**
      * 放大
+     *
      * @param animate 是否动画过渡
      */
     public void zoomIn(boolean animate) {
         MapPosition mapPosition = map.getMapPosition();
-        mapPosition.setZoom(mapPosition.getZoom()+1);
+        mapPosition.setZoom(mapPosition.getZoom() + 1);
         if (animate) {
 //            map.animator().animateZoom(300, 2, 0.5f, 0.5f);
             map.animator().animateTo(mapPosition);
@@ -407,11 +414,12 @@ public class NavinfoMap extends Object {
 
     /**
      * 缩小地图
+     *
      * @param animate 是否动画过渡
      */
     public void zoomOut(boolean animate) {
         MapPosition mapPosition = map.getMapPosition();
-        mapPosition.setZoom(mapPosition.getZoom()-1);
+        mapPosition.setZoom(mapPosition.getZoom() - 1);
         if (animate) {
 //            map.animator().animateZoom(300, 0.5, 0.5f, 0.5f);
             map.animator().animateTo(mapPosition);
