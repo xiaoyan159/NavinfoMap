@@ -8,7 +8,11 @@ import android.view.View;
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
 
+import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
+import org.oscim.layers.marker.ItemizedLayer;
+import org.oscim.layers.marker.MarkerItem;
+import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
 
 /**
@@ -33,6 +37,11 @@ public class NavinfoMap extends Object {
      * 指北针位置
      */
     private Point compassPoint;
+
+    /**
+     * marker图层
+     */
+    private ItemizedLayer markerLayer;
 
     /**
      * 构造函数
@@ -69,6 +78,14 @@ public class NavinfoMap extends Object {
                 marker.setPosition(((MarkerOptions) options).getPosition());
                 marker.setVisible(((MarkerOptions) options).isVisible());
                 marker.setZIndex(((MarkerOptions) options).getZIndex());
+                if(markerLayer==null){
+                    markerLayer = new ItemizedLayer(getVtmMap(),null);
+                    getVtmMap().layers().add(markerLayer,marker.getZIndex());
+                }
+                MarkerItem markerItem = new MarkerItem(marker.getId(),marker.getTitle(),new GeoPoint(marker.getPosition().getLatitude(),marker.getPosition().getLongitude()));
+                MarkerSymbol markerSymbol = new MarkerSymbol(marker.getIcon().getBitmap(),MarkerSymbol.HotspotPlace.BOTTOM_CENTER);
+                markerItem.setMarker(markerSymbol);
+                markerLayer.addItems(markerItem);
             }
         }
         return null;
