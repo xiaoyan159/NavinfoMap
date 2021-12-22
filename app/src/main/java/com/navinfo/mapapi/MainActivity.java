@@ -9,8 +9,12 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.ViewCompat;
 
+import com.navinfo.mapapi.map.BitmapDescriptor;
 import com.navinfo.mapapi.map.Marker;
+import com.navinfo.mapapi.map.MarkerOptions;
 import com.navinfo.mapapi.map.NIMapView;
+import com.navinfo.mapapi.model.LatLng;
+
 import android.os.Build;
 import android.content.pm.PackageManager;
 
@@ -70,7 +74,10 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         MapManager.getInstance().location();
         AndroidBitmap mCenterMakerBitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker));
-        MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
+        //MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(new LatLng(40.062304, 116.213801)).icon(new BitmapDescriptor(mCenterMakerBitmap));
+        niMapView.getMap().addOverlay(markerOptions);
         niMapView.setZoomControlsPosition(new Point(1400,1400));
         niMapView.showZoomControls(true);
         niMapView.showScaleControl(true);

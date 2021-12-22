@@ -78,14 +78,16 @@ public class NavinfoMap extends Object {
                 marker.setPosition(((MarkerOptions) options).getPosition());
                 marker.setVisible(((MarkerOptions) options).isVisible());
                 marker.setZIndex(((MarkerOptions) options).getZIndex());
-                if(markerLayer==null){
-                    markerLayer = new ItemizedLayer(getVtmMap(),null);
-                    getVtmMap().layers().add(markerLayer,marker.getZIndex());
-                }
+
                 MarkerItem markerItem = new MarkerItem(marker.getId(),marker.getTitle(),new GeoPoint(marker.getPosition().getLatitude(),marker.getPosition().getLongitude()));
                 MarkerSymbol markerSymbol = new MarkerSymbol(marker.getIcon().getBitmap(),MarkerSymbol.HotspotPlace.BOTTOM_CENTER);
+
+                if(markerLayer==null){
+                    markerLayer = new ItemizedLayer(getVtmMap(),markerSymbol);
+                    getVtmMap().layers().add(markerLayer,marker.getZIndex());
+                }
                 markerItem.setMarker(markerSymbol);
-                markerLayer.addItems(markerItem);
+                markerLayer.addItem(markerItem);
             }
         }
         return null;

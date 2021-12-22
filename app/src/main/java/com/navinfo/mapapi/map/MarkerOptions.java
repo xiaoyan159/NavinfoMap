@@ -65,9 +65,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param isClickable
      * @return
      */
-    MarkerOptions clickable(boolean isClickable) {
+    public MarkerOptions  clickable(boolean isClickable) {
         this.clickable = isClickable;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -76,9 +76,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param draggable
      * @return
      */
-    MarkerOptions draggable(boolean draggable) {
+    public MarkerOptions draggable(boolean draggable) {
         this.draggable = draggable;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -87,9 +87,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param extraInfo
      * @return
      */
-    MarkerOptions extraInfo(Bundle extraInfo) {
+    public MarkerOptions extraInfo(Bundle extraInfo) {
         this.extraInfo = extraInfo;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -98,9 +98,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param point
      * @return
      */
-    MarkerOptions fixedScreenPosition(Point point) {
+    public MarkerOptions fixedScreenPosition(Point point) {
         this.point = point;
-        return new MarkerOptions();
+        return this;
     }
 
 
@@ -149,9 +149,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param icon
      * @return
      */
-    MarkerOptions icon(BitmapDescriptor icon) {
+    public MarkerOptions icon(BitmapDescriptor icon) {
         this.bitmapDescriptor = icon;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -160,9 +160,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param infoWindow
      * @return
      */
-    MarkerOptions infoWindow(InfoWindow infoWindow) {
+    public MarkerOptions infoWindow(InfoWindow infoWindow) {
         this.infoWindow = infoWindow;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -191,9 +191,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param position
      * @return
      */
-    MarkerOptions position(LatLng position) {
+    public MarkerOptions position(LatLng position) {
         this.position = position;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -202,9 +202,9 @@ public final class MarkerOptions extends OverlayOptions {
      * @param visible
      * @return
      */
-    MarkerOptions visible(boolean visible) {
+    public MarkerOptions visible(boolean visible) {
         this.visible = visible;
-        return new MarkerOptions();
+        return this;
     }
 
     /**
@@ -213,8 +213,8 @@ public final class MarkerOptions extends OverlayOptions {
      * @param zIndex
      * @return
      */
-    MarkerOptions zIndex(int zIndex) {
+    public MarkerOptions zIndex(int zIndex) {
         this.zIndex = zIndex;
-        return new MarkerOptions();
+        return this;
     }
 }
