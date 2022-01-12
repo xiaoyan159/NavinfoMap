@@ -12,7 +12,6 @@ local.properties
 *.R
 gradlew
 .project
-build.gradle
 gradlew.bat
 project.properties
 settings.gradle
@@ -95,5 +94,3 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-
-/doc/api/

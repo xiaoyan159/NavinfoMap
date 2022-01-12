@@ -1,2 +1,3 @@
-include ':app'
+include ':navimap-example'
+include ':navinfo-map-library'
 rootProject.name = "NavinfoMap"
