@@ -3,6 +3,10 @@ package com.navinfo.mapapi.map;
 import android.graphics.Point;
 import android.os.Bundle;
 
+import com.navinfo.mapapi.model.LatLng;
+
+import java.util.List;
+
 /**
  * 线覆盖物
  */
@@ -43,11 +47,6 @@ public final class Polyline extends Overlay {
      * marker 覆盖物的 zIndex
      */
     private int zIndex;
-
-    /**
-     * Marker 覆盖物的图标
-     */
-    private BitmapDescriptor bitmapDescriptor;
 
     /**
      * 可见性
