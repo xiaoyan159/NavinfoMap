@@ -13,6 +13,7 @@ import com.navinfo.mapapi.map.BitmapDescriptor;
 import com.navinfo.mapapi.map.Marker;
 import com.navinfo.mapapi.map.MarkerOptions;
 import com.navinfo.mapapi.map.NIMapView;
+import com.navinfo.mapapi.map.Overlay;
 import com.navinfo.mapapi.model.LatLng;
 
 import android.os.Build;
@@ -33,6 +34,8 @@ import org.oscim.utils.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 测试工程
@@ -43,6 +46,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
      */
     private LocationTextureLayer mLocationLayer;
     private NIMapView niMapView;
+    private Marker marker;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +70,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         setContentView(R.layout.activity_main);
         niMapView = (NIMapView)findViewById(R.id.mapView);
+        findViewById(R.id.btn_add).setOnClickListener(this);
+        findViewById(R.id.btn_del).setOnClickListener(this);
+
         MapManager.getInstance().init(MainActivity.this,niMapView);
         MapManager.getInstance().loadMap();
         MapManager.getInstance().changeMapStyle("smap","",5);
@@ -73,11 +80,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         createLocationLayers();
 
         MapManager.getInstance().location();
-        AndroidBitmap mCenterMakerBitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker));
-        //MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(new LatLng(40.062304, 116.213801)).icon(new BitmapDescriptor(mCenterMakerBitmap));
-        niMapView.getMap().addOverlay(markerOptions);
+
         niMapView.setZoomControlsPosition(new Point(1400,1400));
         niMapView.showZoomControls(true);
         niMapView.showScaleControl(true);
@@ -86,6 +89,22 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     @Override
     public void onClick(View view){
 
+        switch (view.getId()){
+            case R.id.btn_del:
+                if(marker!=null){
+                    List<Overlay> list = new ArrayList<>();
+                    list.add(marker);
+                    niMapView.getMap().removeOverLays(list);
+                }
+                break;
+            case R.id.btn_add:
+                AndroidBitmap mCenterMakerBitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker));
+                //MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
+                MarkerOptions markerOptions = new MarkerOptions();
+                markerOptions.position(new LatLng(40.062304, 116.213801)).icon(new BitmapDescriptor(mCenterMakerBitmap));
+                marker = (Marker) niMapView.getMap().addOverlay(markerOptions);
+                break;
+        }
     }
 
     public void createLocationLayers() {

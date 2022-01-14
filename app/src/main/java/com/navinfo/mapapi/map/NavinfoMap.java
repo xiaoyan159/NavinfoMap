@@ -4,21 +4,23 @@ import android.graphics.Bitmap;
 import android.graphics.Point;
 import android.view.MotionEvent;
 import android.view.View;
-
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
-
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
+import org.oscim.layers.Layer;
 import org.oscim.layers.marker.ItemizedLayer;
+import org.oscim.layers.marker.MarkerInterface;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
 import org.oscim.map.Map;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * 定义 NavinfoMap 地图对象的操作方法与接口
  */
-public class NavinfoMap extends Object {
+public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureListener<MarkerInterface> {
 
     /**
      *
@@ -44,11 +46,22 @@ public class NavinfoMap extends Object {
     private ItemizedLayer markerLayer;
 
     /**
+     * Marker事件监听
+     */
+    private OnMarkerClickListener onMarkerClickListener;
+
+    /**
+     * 缓存记录
+     */
+    private java.util.Map<String,Overlay> mapCache;
+
+    /**
      * 构造函数
      */
     public NavinfoMap(NIMapView niMapView) {
         this.mMapView = niMapView;
         this.map = niMapView.getVtmMap();
+        this.mapCache = new HashMap<>();
     }
 
     /**
@@ -79,15 +92,18 @@ public class NavinfoMap extends Object {
                 marker.setVisible(((MarkerOptions) options).isVisible());
                 marker.setZIndex(((MarkerOptions) options).getZIndex());
 
-                MarkerItem markerItem = new MarkerItem(marker.getId(),marker.getTitle(),new GeoPoint(marker.getPosition().getLatitude(),marker.getPosition().getLongitude()));
-                MarkerSymbol markerSymbol = new MarkerSymbol(marker.getIcon().getBitmap(),MarkerSymbol.HotspotPlace.BOTTOM_CENTER);
+                MarkerItem markerItem = new MarkerItem(marker.getId(), marker.getTitle(), new GeoPoint(marker.getPosition().getLatitude(), marker.getPosition().getLongitude()));
+                MarkerSymbol markerSymbol = new MarkerSymbol(marker.getIcon().getBitmap(), MarkerSymbol.HotspotPlace.BOTTOM_CENTER);
 
-                if(markerLayer==null){
-                    markerLayer = new ItemizedLayer(getVtmMap(),markerSymbol);
-                    getVtmMap().layers().add(markerLayer,marker.getZIndex());
+                if (markerLayer == null) {
+                    markerLayer = new ItemizedLayer(getVtmMap(), markerSymbol);
+                    getVtmMap().layers().add(markerLayer, marker.getZIndex());
                 }
                 markerItem.setMarker(markerSymbol);
                 markerLayer.addItem(markerItem);
+                getVtmMap().updateMap(true);
+                this.mapCache.put(marker.getId(),marker);
+                return marker;
             }
         }
         return null;
@@ -311,7 +327,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void removeMarkerClickListener(OnMarkerClickListener listener) {
-
+        onMarkerClickListener = null;
     }
 
     /**
@@ -320,7 +336,36 @@ public class NavinfoMap extends Object {
      * @param overlays
      */
     public void removeOverLays(java.util.List<Overlay> overlays) {
+        if (overlays != null) {
+            //遍历图层
+            for (Overlay overlay : overlays) {
 
+                if (overlay instanceof Marker) {
+
+                    Marker marker = (Marker) overlay;
+
+                    if (getVtmMap().layers() != null) {
+                        b:
+                        for (int i = 0; i < getVtmMap().layers().size(); i++) {
+                            Layer layer = getVtmMap().layers().get(i);
+                            if (layer instanceof ItemizedLayer) {
+                                List<MarkerInterface> list = ((ItemizedLayer) layer).getItemList();
+                                if (list != null) {
+                                    for (MarkerInterface markerInterface : list) {
+                                        MarkerItem markerItem = (MarkerItem) markerInterface;
+                                        if (markerItem.getTitle().equalsIgnoreCase(marker.getId())) {
+                                            ((ItemizedLayer) layer).removeItem(markerInterface);
+                                            ((ItemizedLayer) layer).populate();
+                                            break b;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
@@ -545,7 +590,7 @@ public class NavinfoMap extends Object {
      * @param listener
      */
     public void setOnMarkerClickListener(OnMarkerClickListener listener) {
-
+        this.onMarkerClickListener = listener;
     }
 
     /**
@@ -788,6 +833,14 @@ public class NavinfoMap extends Object {
          * @return
          */
         boolean onMarkerClick(Marker marker);
+
+        /**
+         * 地图 Marker 覆盖物长按事件监听函数,开发者注意根据参数Marker来判断响应某个对象的点击事件
+         *
+         * @param marker
+         * @return
+         */
+        boolean onMarkerLongClick(Marker marker);
     }
 
     /**
@@ -872,5 +925,37 @@ public class NavinfoMap extends Object {
          */
         void onSnapshotReady(Bitmap snapshot);
 
+    }
+
+    @Override
+    public boolean onItemSingleTapUp(int index, MarkerInterface item) {
+        if (this.onMarkerClickListener != null) {
+            MarkerItem markerItem = (MarkerItem) item;
+            if(markerItem.getTitle()!=null&&this.mapCache!=null&&this.mapCache.containsKey(markerItem.getTitle())){
+                Marker marker = (Marker) this.mapCache.get(markerItem.getTitle());
+                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(),markerItem.getPoint().getLongitude()));
+                marker.setIcon(new BitmapDescriptor(markerItem.getMarker().getBitmap()));
+                if(this.onMarkerClickListener!=null){
+                    return this.onMarkerClickListener.onMarkerClick(marker);
+                }
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public boolean onItemLongPress(int index, MarkerInterface item) {
+        if (this.onMarkerClickListener != null) {
+            MarkerItem markerItem = (MarkerItem) item;
+            if(markerItem.getTitle()!=null&&this.mapCache!=null&&this.mapCache.containsKey(markerItem.getTitle())){
+                Marker marker = (Marker) this.mapCache.get(markerItem.getTitle());
+                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(),markerItem.getPoint().getLongitude()));
+                marker.setIcon(new BitmapDescriptor(markerItem.getMarker().getBitmap()));
+                if(this.onMarkerClickListener!=null){
+                    return this.onMarkerClickListener.onMarkerLongClick(marker);
+                }
+            }
+        }
+        return false;
     }
 }
