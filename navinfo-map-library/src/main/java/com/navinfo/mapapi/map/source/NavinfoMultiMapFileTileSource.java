@@ -60,6 +60,7 @@ public class NavinfoMultiMapFileTileSource extends UrlTileSource implements IMap
     public String getTileUrl(Tile tile) {
         StringBuilder sb = new StringBuilder();
         sb.append(DEFAULT_URL).append("?").append(mTileUrlFormatter.formatTilePath(this, tile));
+        System.out.println(sb.toString());
         return sb.toString();
     }
 
