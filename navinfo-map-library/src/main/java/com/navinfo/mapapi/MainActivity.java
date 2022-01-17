@@ -14,6 +14,8 @@ import com.navinfo.mapapi.map.Marker;
 import com.navinfo.mapapi.map.MarkerOptions;
 import com.navinfo.mapapi.map.NIMapView;
 import com.navinfo.mapapi.map.Overlay;
+import com.navinfo.mapapi.map.Polyline;
+import com.navinfo.mapapi.map.PolylineOptions;
 import com.navinfo.mapapi.model.LatLng;
 
 import android.os.Build;
@@ -47,6 +49,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private LocationTextureLayer mLocationLayer;
     private NIMapView niMapView;
     private Marker marker;
+    List<LatLng> list = new ArrayList<>();
+
+    private Polyline polyline;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +89,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         niMapView.setZoomControlsPosition(new Point(1400,1400));
         niMapView.showZoomControls(true);
         niMapView.showScaleControl(true);
+        list.add(new LatLng(40.062304, 116.213801));
+        list.add(new LatLng(40.064304, 116.213801));
     }
 
     @Override
@@ -96,6 +103,11 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                     list.add(marker);
                     niMapView.getMap().removeOverLays(list);
                 }
+                if(polyline!=null){
+                    List<Overlay> list = new ArrayList<>();
+                    list.add(polyline);
+                    niMapView.getMap().removeOverLays(list);
+                }
                 break;
             case R.id.btn_add:
                 AndroidBitmap mCenterMakerBitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker));
@@ -103,6 +115,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(new LatLng(40.062304, 116.213801)).icon(new BitmapDescriptor(mCenterMakerBitmap));
                 marker = (Marker) niMapView.getMap().addOverlay(markerOptions);
+                PolylineOptions polylineOptions = new PolylineOptions();
+                polylineOptions.color(getColor(R.color.black)).width(5).zIndex(5).points(list);
+                polyline = (Polyline) niMapView.getMap().addOverlay(polylineOptions);
                 break;
         }
     }
