@@ -441,39 +441,41 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      *
      * @param overlays
      */
-    public void removeOverLays(java.util.List<Overlay> overlays) {
-        if (overlays != null) {
-            //遍历图层
-            for (Overlay overlay : overlays) {
-                if (getVtmMap().layers() != null) {
-                    b:
-                    for (int i = 0; i < getVtmMap().layers().size(); i++) {
-                        Layer layer = getVtmMap().layers().get(i);
-                        if (overlay instanceof Marker) {
-                            Marker marker = (Marker) overlay;
-                            if (layer instanceof ItemizedLayer) {
-                                List<MarkerInterface> list = ((ItemizedLayer) layer).getItemList();
-                                if (list != null) {
-                                    for (MarkerInterface markerInterface : list) {
-                                        MarkerItem markerItem = (MarkerItem) markerInterface;
-                                        if (markerItem.getTitle().equalsIgnoreCase(marker.getId())) {
-                                            ((ItemizedLayer) layer).removeItem(markerInterface);
-                                            ((ItemizedLayer) layer).populate();
-                                            break b;
+    public synchronized void removeOverLays(java.util.List<Overlay> overlays) {
+        synchronized (this){
+            if (overlays != null) {
+                //遍历图层
+                for (Overlay overlay : overlays) {
+                    if (getVtmMap().layers() != null) {
+                        b:
+                        for (int i = 0; i < getVtmMap().layers().size(); i++) {
+                            Layer layer = getVtmMap().layers().get(i);
+                            if (overlay instanceof Marker) {
+                                Marker marker = (Marker) overlay;
+                                if (layer instanceof ItemizedLayer) {
+                                    List<MarkerInterface> list = ((ItemizedLayer) layer).getItemList();
+                                    if (list != null) {
+                                        for (MarkerInterface markerInterface : list) {
+                                            MarkerItem markerItem = (MarkerItem) markerInterface;
+                                            if (markerItem.getTitle().equalsIgnoreCase(marker.getId())) {
+                                                ((ItemizedLayer) layer).removeItem(markerInterface);
+                                                ((ItemizedLayer) layer).populate();
+                                                break b;
+                                            }
                                         }
                                     }
                                 }
-                            }
-                        } else if (overlay instanceof Polyline) {
-                            if (layer instanceof VectorLayer) {
-                                Geometry geometry = getLineString(((Polyline) overlay).getPoints());
-                                if(geometry!=null){
-                                    if(this.mapDrawableCache!=null&&this.mapDrawableCache.containsKey(geometry.toString())){
-                                        ((VectorLayer) layer).remove(this.mapDrawableCache.get(geometry.toString()));
-                                        this.mapDrawableCache.remove(geometry.toString());
-                                        this.mapCache.remove(geometry.toString());
-                                        ((VectorLayer) layer).update();
-                                        break b;
+                            } else if (overlay instanceof Polyline) {
+                                if (layer instanceof VectorLayer) {
+                                    Geometry geometry = getLineString(((Polyline) overlay).getPoints());
+                                    if(geometry!=null){
+                                        if(this.mapDrawableCache!=null&&this.mapDrawableCache.containsKey(geometry.toString())){
+                                            ((VectorLayer) layer).remove(this.mapDrawableCache.get(geometry.toString()));
+                                            this.mapDrawableCache.remove(geometry.toString());
+                                            this.mapCache.remove(geometry.toString());
+                                            ((VectorLayer) layer).update();
+                                            break b;
+                                        }
                                     }
                                 }
                             }
@@ -482,6 +484,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                 }
             }
         }
+
     }
 
 
