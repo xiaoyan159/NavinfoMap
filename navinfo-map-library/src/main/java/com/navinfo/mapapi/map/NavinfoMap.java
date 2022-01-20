@@ -129,7 +129,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                 }
                 markerItem.setMarker(markerSymbol);
                 markerLayer.addItem(markerItem);
-                getVtmMap().updateMap(true);
+                markerLayer.populate();
                 this.mapCache.put(marker.getId(), marker);
                 return marker;
             } else if (options instanceof PolylineOptions) {
@@ -149,7 +149,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                     getVtmMap().layers().add(vectorLayer, polyline.getZIndex());
                 }
                 vectorLayer.add(drawable);
-                getVtmMap().updateMap(true);
+                vectorLayer.update();
                 this.mapCache.put(polyline.hashCode() + "", polyline);
                 this.mapDrawableCache.put(polyline.hashCode() + "", drawable);
                 return polyline;
@@ -174,7 +174,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                     Style style = styleBuilder.fillColor(polygon.getFillColor()).build();
                     PolygonDrawable drawable = new PolygonDrawable(list, style);
                     vectorLayer.add(drawable);
-                    getVtmMap().updateMap(true);
+                    vectorLayer.update();
                     this.mapCache.put(polygon.hashCode() + "", polygon);
                     this.mapDrawableCache.put(polygon.hashCode() + "", drawable);
                     return polygon;
@@ -486,6 +486,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                                         for (MarkerInterface markerInterface : list) {
                                             MarkerItem markerItem = (MarkerItem) markerInterface;
                                             if (markerItem.getTitle().equalsIgnoreCase(marker.getId())) {
+                                                this.mapCache.remove(marker.getId() + "");
                                                 ((ItemizedLayer) layer).removeItem(markerInterface);
                                                 ((ItemizedLayer) layer).populate();
                                                 break b;

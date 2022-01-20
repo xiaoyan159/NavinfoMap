@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.view.View;
+
 import androidx.fragment.app.FragmentActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.ViewCompat;
@@ -74,19 +75,19 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         }
 
         setContentView(R.layout.activity_main);
-        niMapView = (NIMapView)findViewById(R.id.mapView);
+        niMapView = (NIMapView) findViewById(R.id.mapView);
         findViewById(R.id.btn_add).setOnClickListener(this);
         findViewById(R.id.btn_del).setOnClickListener(this);
 
-        MapManager.getInstance().init(MainActivity.this,niMapView);
+        MapManager.getInstance().init(MainActivity.this, niMapView);
         MapManager.getInstance().loadMap();
-        MapManager.getInstance().changeMapStyle("smap","",5);
+        MapManager.getInstance().changeMapStyle("smap", "", 5);
 
         createLocationLayers();
 
         MapManager.getInstance().location();
 
-        niMapView.setZoomControlsPosition(new Point(1400,1400));
+        niMapView.setZoomControlsPosition(new Point(1400, 1400));
         niMapView.showZoomControls(true);
         niMapView.showScaleControl(true);
         list.add(new LatLng(40.062304, 116.213801));
@@ -94,30 +95,34 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     @Override
-    public void onClick(View view){
+    public void onClick(View view) {
 
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.btn_del:
-                if(marker!=null){
+                if (marker != null) {
                     List<Overlay> list = new ArrayList<>();
                     list.add(marker);
                     niMapView.getMap().removeOverLays(list);
                 }
-                if(polyline!=null){
+                marker = null;
+                if (polyline != null) {
                     List<Overlay> list = new ArrayList<>();
                     list.add(polyline);
                     niMapView.getMap().removeOverLays(list);
                 }
+                polyline = null;
                 break;
             case R.id.btn_add:
                 AndroidBitmap mCenterMakerBitmap = new AndroidBitmap(BitmapFactory.decodeResource(getResources(), R.mipmap.marker));
                 //MapManager.getInstance().addMarker(new GeoPoint(40.062304, 116.213801),mCenterMakerBitmap);
                 MarkerOptions markerOptions = new MarkerOptions();
                 markerOptions.position(new LatLng(40.062304, 116.213801)).icon(new BitmapDescriptor(mCenterMakerBitmap));
-                marker = (Marker) niMapView.getMap().addOverlay(markerOptions);
+                if (marker == null)
+                    marker = (Marker) niMapView.getMap().addOverlay(markerOptions);
                 PolylineOptions polylineOptions = new PolylineOptions();
                 polylineOptions.color(getColor(R.color.black)).width(5).zIndex(5).points(list);
-                polyline = (Polyline) niMapView.getMap().addOverlay(polylineOptions);
+                if (polyline == null)
+                    polyline = (Polyline) niMapView.getMap().addOverlay(polylineOptions);
                 break;
         }
     }
