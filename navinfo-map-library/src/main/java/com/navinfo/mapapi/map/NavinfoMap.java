@@ -1,6 +1,7 @@
 package com.navinfo.mapapi.map;
 
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -13,7 +14,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.Polygon;
 import org.oscim.backend.canvas.Paint;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
@@ -26,9 +26,11 @@ import org.oscim.layers.vector.VectorLayer;
 import org.oscim.layers.vector.geometries.Drawable;
 import org.oscim.layers.vector.geometries.LineDrawable;
 import org.oscim.layers.vector.geometries.PointDrawable;
+import org.oscim.layers.vector.geometries.PolygonDrawable;
 import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -148,9 +150,35 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                 }
                 vectorLayer.add(drawable);
                 getVtmMap().updateMap(true);
-                this.mapCache.put(geometry.toString(), polyline);
-                this.mapDrawableCache.put(geometry.toString(),drawable);
+                this.mapCache.put(polyline.hashCode() + "", polyline);
+                this.mapDrawableCache.put(polyline.hashCode() + "", drawable);
                 return polyline;
+            } else if (options instanceof PolygonOptions) {
+                PolygonOptions polygonOptions = (PolygonOptions) options;
+                Polygon polygon = new Polygon();
+                polygon.setExtraInfo(polygonOptions.getExtraInfo());
+                polygon.setFillColor(polygonOptions.getFillColor());
+                polygon.setPoints(polygonOptions.getPoints());
+                polygon.setVisible(polygonOptions.isVisible());
+                polygon.setZIndex(polygonOptions.getZIndex());
+                List<GeoPoint> list = new ArrayList<>();
+                if (polygon.getPoints() != null) {
+                    for (LatLng latlng : polygon.getPoints()) {
+                        list.add(new GeoPoint(latlng.getLatitude(), latlng.getLongitude()));
+                    }
+                    if (vectorLayer == null) {
+                        vectorLayer = new VectorLayer(getVtmMap());
+                        getVtmMap().layers().add(vectorLayer, polygon.getZIndex());
+                    }
+                    Style.Builder styleBuilder = Style.builder().scaleZoomLevel(12);
+                    Style style = styleBuilder.fillColor(polygon.getFillColor()).build();
+                    PolygonDrawable drawable = new PolygonDrawable(list, style);
+                    vectorLayer.add(drawable);
+                    getVtmMap().updateMap(true);
+                    this.mapCache.put(polygon.hashCode() + "", polygon);
+                    this.mapDrawableCache.put(polygon.hashCode() + "", drawable);
+                    return polygon;
+                }
             }
         }
         return null;
@@ -442,7 +470,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      * @param overlays
      */
     public synchronized void removeOverLays(java.util.List<Overlay> overlays) {
-        synchronized (this){
+        synchronized (this) {
             if (overlays != null) {
                 //遍历图层
                 for (Overlay overlay : overlays) {
@@ -467,15 +495,22 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                                 }
                             } else if (overlay instanceof Polyline) {
                                 if (layer instanceof VectorLayer) {
-                                    Geometry geometry = getLineString(((Polyline) overlay).getPoints());
-                                    if(geometry!=null){
-                                        if(this.mapDrawableCache!=null&&this.mapDrawableCache.containsKey(geometry.toString())){
-                                            ((VectorLayer) layer).remove(this.mapDrawableCache.get(geometry.toString()));
-                                            this.mapDrawableCache.remove(geometry.toString());
-                                            this.mapCache.remove(geometry.toString());
-                                            ((VectorLayer) layer).update();
-                                            break b;
-                                        }
+                                    if (this.mapDrawableCache != null && this.mapDrawableCache.containsKey(overlay.hashCode() + "")) {
+                                        ((VectorLayer) layer).remove(this.mapDrawableCache.get(overlay.hashCode() + ""));
+                                        this.mapDrawableCache.remove(overlay.hashCode() + "");
+                                        this.mapCache.remove(overlay.hashCode() + "");
+                                        ((VectorLayer) layer).update();
+                                        break b;
+                                    }
+                                }
+                            } else if (overlay instanceof Polygon) {
+                                if (layer instanceof VectorLayer) {
+                                    if (this.mapDrawableCache != null && this.mapDrawableCache.containsKey(overlay.hashCode() + "")) {
+                                        ((VectorLayer) layer).remove(this.mapDrawableCache.get(overlay.hashCode() + ""));
+                                        this.mapDrawableCache.remove(overlay.hashCode() + "");
+                                        this.mapCache.remove(overlay.hashCode() + "");
+                                        ((VectorLayer) layer).update();
+                                        break b;
                                     }
                                 }
                             }
