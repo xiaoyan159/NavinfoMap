@@ -1,11 +1,20 @@
 package com.navinfo.mapapi.map;
 
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
+
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
+
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.LineString;
+import org.oscim.backend.canvas.Paint;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
 import org.oscim.layers.Layer;
@@ -13,7 +22,15 @@ import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerInterface;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.layers.vector.VectorLayer;
+import org.oscim.layers.vector.geometries.Drawable;
+import org.oscim.layers.vector.geometries.LineDrawable;
+import org.oscim.layers.vector.geometries.PointDrawable;
+import org.oscim.layers.vector.geometries.PolygonDrawable;
+import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -46,6 +63,11 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
     private ItemizedLayer markerLayer;
 
     /**
+     * 几何图层
+     */
+    private VectorLayer vectorLayer;
+
+    /**
      * Marker事件监听
      */
     private OnMarkerClickListener onMarkerClickListener;
@@ -53,7 +75,12 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
     /**
      * 缓存记录
      */
-    private java.util.Map<String,Overlay> mapCache;
+    private java.util.Map<String, Overlay> mapCache;
+
+    /**
+     * 缓存记录
+     */
+    private java.util.Map<String, Drawable> mapDrawableCache;
 
     /**
      * 构造函数
@@ -62,6 +89,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
         this.mMapView = niMapView;
         this.map = niMapView.getVtmMap();
         this.mapCache = new HashMap<>();
+        this.mapDrawableCache = new HashMap<>();
     }
 
     /**
@@ -101,13 +129,119 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                 }
                 markerItem.setMarker(markerSymbol);
                 markerLayer.addItem(markerItem);
-                getVtmMap().updateMap(true);
-                this.mapCache.put(marker.getId(),marker);
+                markerLayer.populate();
+                this.mapCache.put(marker.getId(), marker);
                 return marker;
+            } else if (options instanceof PolylineOptions) {
+                PolylineOptions polylineOptions = (PolylineOptions) options;
+                Polyline polyline = new Polyline();
+                polyline.setClickable(polylineOptions.isClickable());
+                polyline.setPoints(polylineOptions.getPoints());
+                polyline.setWidth(polylineOptions.getWidth());
+                polyline.setColor(polylineOptions.getColor());
+                polyline.setExtraInfo(polylineOptions.getExtraInfo());
+                polyline.setZIndex(polylineOptions.getZIndex());
+                Geometry geometry = getLineString(polyline.getPoints());
+                Style vectorStyle = Style.builder().scaleZoomLevel(20).buffer(1).strokeColor(polyline.getColor()).stippleColor(polyline.getColor()).fillColor(polyline.getColor()).strokeWidth(polyline.getWidth()).stippleWidth(polyline.getWidth()).build();
+                Drawable drawable = convertGeometry2Drawable(geometry, vectorStyle);
+                if (vectorLayer == null) {
+                    vectorLayer = new VectorLayer(getVtmMap());
+                    getVtmMap().layers().add(vectorLayer, polyline.getZIndex());
+                }
+                vectorLayer.add(drawable);
+                vectorLayer.update();
+                this.mapCache.put(polyline.hashCode() + "", polyline);
+                this.mapDrawableCache.put(polyline.hashCode() + "", drawable);
+                return polyline;
+            } else if (options instanceof PolygonOptions) {
+                PolygonOptions polygonOptions = (PolygonOptions) options;
+                Polygon polygon = new Polygon();
+                polygon.setExtraInfo(polygonOptions.getExtraInfo());
+                polygon.setFillColor(polygonOptions.getFillColor());
+                polygon.setPoints(polygonOptions.getPoints());
+                polygon.setVisible(polygonOptions.isVisible());
+                polygon.setZIndex(polygonOptions.getZIndex());
+                List<GeoPoint> list = new ArrayList<>();
+                if (polygon.getPoints() != null) {
+                    for (LatLng latlng : polygon.getPoints()) {
+                        list.add(new GeoPoint(latlng.getLatitude(), latlng.getLongitude()));
+                    }
+                    if (vectorLayer == null) {
+                        vectorLayer = new VectorLayer(getVtmMap());
+                        getVtmMap().layers().add(vectorLayer, polygon.getZIndex());
+                    }
+                    Style.Builder styleBuilder = Style.builder().scaleZoomLevel(12);
+                    Style style = styleBuilder.fillColor(polygon.getFillColor()).build();
+                    PolygonDrawable drawable = new PolygonDrawable(list, style);
+                    vectorLayer.add(drawable);
+                    vectorLayer.update();
+                    this.mapCache.put(polygon.hashCode() + "", polygon);
+                    this.mapDrawableCache.put(polygon.hashCode() + "", drawable);
+                    return polygon;
+                }
             }
         }
         return null;
     }
+
+
+    /**
+     * 数据转换
+     *
+     * @param geometry
+     * @param vectorLayerStyle
+     * @return
+     */
+    private Drawable convertGeometry2Drawable(Geometry geometry, Style vectorLayerStyle) {
+
+        if (geometry == null) {
+            return null;
+        }
+
+        Drawable resultDrawable = null;
+
+        if ("POINT".equals(geometry.getGeometryType().toUpperCase())) {
+            GeoPoint geoPoint = new GeoPoint(geometry.getCoordinate().y, geometry.getCoordinate().x);
+            if (geoPoint != null) {
+                resultDrawable = new PointDrawable(geoPoint, vectorLayerStyle);
+            }
+        } else if ("LINESTRING".equals(geometry.getGeometryType().toUpperCase())) {
+            if (geometry != null) {
+                resultDrawable = new LineDrawable((LineString) geometry, vectorLayerStyle);
+            } else {
+                System.out.println("convertGeometry2Drawable=复杂===" + geometry.toString());
+            }
+        } else if ("POLYGON".equals(geometry.getGeometryType().toUpperCase())) {
+/*            org.locationtech.jts.geom.Geometry polygon = GeometryTools.getInstance(MapManager.getInstance().getmMapView().mapView()).createGeometry(geometry.ExportToWkt());
+            if (polygon != null) {
+                resultDrawable = new PolygonDrawable((Polygon) polygon, vectorLayerStyle);
+            }*/
+        }
+
+        return resultDrawable;
+    }
+
+    /**
+     * 创建线几何
+     *
+     * @param list
+     * @return
+     */
+    private Geometry getLineString(List<LatLng> list) {
+        if (list != null && list.size() > 1) {
+            GeometryFactory factory = new GeometryFactory();
+            Coordinate[] coordinates = new Coordinate[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                coordinates[i] = new Coordinate(list.get(i).getLongitude(), list.get(i).getLatitude());
+            }
+            Geometry geometry = factory.createLineString(coordinates);
+            if (geometry != null)
+                return geometry;
+        }
+        return null;
+
+    }
+
 
     /**
      * 向地图添加多个 Overlay
@@ -335,29 +469,49 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      *
      * @param overlays
      */
-    public void removeOverLays(java.util.List<Overlay> overlays) {
-        if (overlays != null) {
-            //遍历图层
-            for (Overlay overlay : overlays) {
-
-                if (overlay instanceof Marker) {
-
-                    Marker marker = (Marker) overlay;
-
+    public synchronized void removeOverLays(java.util.List<Overlay> overlays) {
+        synchronized (this) {
+            if (overlays != null) {
+                //遍历图层
+                for (Overlay overlay : overlays) {
                     if (getVtmMap().layers() != null) {
                         b:
                         for (int i = 0; i < getVtmMap().layers().size(); i++) {
                             Layer layer = getVtmMap().layers().get(i);
-                            if (layer instanceof ItemizedLayer) {
-                                List<MarkerInterface> list = ((ItemizedLayer) layer).getItemList();
-                                if (list != null) {
-                                    for (MarkerInterface markerInterface : list) {
-                                        MarkerItem markerItem = (MarkerItem) markerInterface;
-                                        if (markerItem.getTitle().equalsIgnoreCase(marker.getId())) {
-                                            ((ItemizedLayer) layer).removeItem(markerInterface);
-                                            ((ItemizedLayer) layer).populate();
-                                            break b;
+                            if (overlay instanceof Marker) {
+                                Marker marker = (Marker) overlay;
+                                if (layer instanceof ItemizedLayer) {
+                                    List<MarkerInterface> list = ((ItemizedLayer) layer).getItemList();
+                                    if (list != null) {
+                                        for (MarkerInterface markerInterface : list) {
+                                            MarkerItem markerItem = (MarkerItem) markerInterface;
+                                            if (markerItem.getTitle().equalsIgnoreCase(marker.getId())) {
+                                                this.mapCache.remove(marker.getId() + "");
+                                                ((ItemizedLayer) layer).removeItem(markerInterface);
+                                                ((ItemizedLayer) layer).populate();
+                                                break b;
+                                            }
                                         }
+                                    }
+                                }
+                            } else if (overlay instanceof Polyline) {
+                                if (layer instanceof VectorLayer) {
+                                    if (this.mapDrawableCache != null && this.mapDrawableCache.containsKey(overlay.hashCode() + "")) {
+                                        ((VectorLayer) layer).remove(this.mapDrawableCache.get(overlay.hashCode() + ""));
+                                        this.mapDrawableCache.remove(overlay.hashCode() + "");
+                                        this.mapCache.remove(overlay.hashCode() + "");
+                                        ((VectorLayer) layer).update();
+                                        break b;
+                                    }
+                                }
+                            } else if (overlay instanceof Polygon) {
+                                if (layer instanceof VectorLayer) {
+                                    if (this.mapDrawableCache != null && this.mapDrawableCache.containsKey(overlay.hashCode() + "")) {
+                                        ((VectorLayer) layer).remove(this.mapDrawableCache.get(overlay.hashCode() + ""));
+                                        this.mapDrawableCache.remove(overlay.hashCode() + "");
+                                        this.mapCache.remove(overlay.hashCode() + "");
+                                        ((VectorLayer) layer).update();
+                                        break b;
                                     }
                                 }
                             }
@@ -366,6 +520,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
                 }
             }
         }
+
     }
 
 
@@ -931,11 +1086,11 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
     public boolean onItemSingleTapUp(int index, MarkerInterface item) {
         if (this.onMarkerClickListener != null) {
             MarkerItem markerItem = (MarkerItem) item;
-            if(markerItem.getTitle()!=null&&this.mapCache!=null&&this.mapCache.containsKey(markerItem.getTitle())){
+            if (markerItem.getTitle() != null && this.mapCache != null && this.mapCache.containsKey(markerItem.getTitle())) {
                 Marker marker = (Marker) this.mapCache.get(markerItem.getTitle());
-                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(),markerItem.getPoint().getLongitude()));
+                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(), markerItem.getPoint().getLongitude()));
                 marker.setIcon(new BitmapDescriptor(markerItem.getMarker().getBitmap()));
-                if(this.onMarkerClickListener!=null){
+                if (this.onMarkerClickListener != null) {
                     return this.onMarkerClickListener.onMarkerClick(marker);
                 }
             }
@@ -947,11 +1102,11 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
     public boolean onItemLongPress(int index, MarkerInterface item) {
         if (this.onMarkerClickListener != null) {
             MarkerItem markerItem = (MarkerItem) item;
-            if(markerItem.getTitle()!=null&&this.mapCache!=null&&this.mapCache.containsKey(markerItem.getTitle())){
+            if (markerItem.getTitle() != null && this.mapCache != null && this.mapCache.containsKey(markerItem.getTitle())) {
                 Marker marker = (Marker) this.mapCache.get(markerItem.getTitle());
-                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(),markerItem.getPoint().getLongitude()));
+                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(), markerItem.getPoint().getLongitude()));
                 marker.setIcon(new BitmapDescriptor(markerItem.getMarker().getBitmap()));
-                if(this.onMarkerClickListener!=null){
+                if (this.onMarkerClickListener != null) {
                     return this.onMarkerClickListener.onMarkerLongClick(marker);
                 }
             }
