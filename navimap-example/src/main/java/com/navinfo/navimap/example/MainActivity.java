@@ -58,7 +58,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
 
         MapManager.getInstance().location();
 
-        niMapView.setZoomControlsPosition(new Point(1400,1400));
+//        niMapView.setZoomControlsPosition(new Point(1400,1400));
         niMapView.showZoomControls(true);
         niMapView.showScaleControl(true);
     }

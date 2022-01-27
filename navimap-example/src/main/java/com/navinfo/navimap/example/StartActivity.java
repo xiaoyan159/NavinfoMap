@@ -35,7 +35,7 @@ public class StartActivity extends Activity {
     private void initListMapData() {
         listData = new ArrayList<>();
 
-        listData.add(new StartActivityEntity("基础地图显示", MainActivity.class));
+        listData.add(new StartActivityEntity("显示基础地图", MainActivity.class));
     }
 
 }
