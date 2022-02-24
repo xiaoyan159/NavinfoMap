@@ -26,14 +26,20 @@ public class NavinfoMapRastorTileSource extends UrlTileSource {
 
     //    private static final String DEFAULT_URL = NavinfoSourecs.GAOFENMAP.build().getUrl().toString();
     private static final String DEFAULT_PATH = "z={Z}&x={X}&y={Y}";
+    private boolean isTMSProtocol = true; // 是否为TMS协议，TMS协议与XYZ协议在Y轴的定义稍有不同
 
     static final Logger log = LoggerFactory.getLogger(LwHttp.class);
 
     public static class Builder<T extends Builder<T>> extends UrlTileSource.Builder<T> {
-
+        private boolean isTMSProtocol = true;
         public Builder(String url) {
             super(url, DEFAULT_PATH);
             overZoom(2);
+        }
+
+        public Builder isTMSProtocol(boolean tms) {
+            this.isTMSProtocol = tms;
+            return this;
         }
 
         @Override
@@ -45,6 +51,7 @@ public class NavinfoMapRastorTileSource extends UrlTileSource {
 
     protected NavinfoMapRastorTileSource(Builder<?> builder) {
         super(builder);
+        this.isTMSProtocol = builder.isTMSProtocol;
     }
 
     @SuppressWarnings("rawtypes")
@@ -76,9 +83,9 @@ public class NavinfoMapRastorTileSource extends UrlTileSource {
     }
 
     public String getTileUrl(Tile tile) {
-        String url = getUrl().toString();
+        String url = super.getTileUrl(tile);
         int y = tile.tileY;
-        if (url.contains("map.gtimg.com")) {
+        if (!isTMSProtocol) {
             y = (int) Math.pow(2, tile.zoomLevel) - 1 - tile.tileY;
         }
         url = url.replace("{X}", String.valueOf(tile.tileX));
@@ -87,14 +94,6 @@ public class NavinfoMapRastorTileSource extends UrlTileSource {
         url = url.replace("{x}", String.valueOf(tile.tileX));
         url = url.replace("{y}", String.valueOf(y));
         url = url.replace("{z}", String.valueOf(tile.zoomLevel));
-//        url = url.replace("{z}",   String.valueOf(tile.zoomLevel));
-//        StringBuilder sb = new StringBuilder();
-//        String fuhao = "?";
-//        if (getUrl().toString().contains("?")) {
-//            fuhao = "&";
-//        }
-//        StringBuilder urlSB = sb.append(getUrl()).append(fuhao).append(URL_FORMATTER.formatTilePath(this, tile));
-//        Log.e("jingo",urlSB.toString());
         return url;
     }
 

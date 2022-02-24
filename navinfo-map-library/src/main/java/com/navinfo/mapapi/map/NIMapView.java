@@ -7,15 +7,18 @@ import android.os.Bundle;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import com.navinfo.mapapi.MapManager;
 import com.navinfo.mapapi.R;
 import com.navinfo.mapapi.animation.RotateAnimation;
+import com.navinfo.mapapi.map.source.NavinfoGeoJsonTileSource;
 import com.navinfo.mapapi.model.LatLng;
 
 import org.oscim.android.MapView;
@@ -23,29 +26,29 @@ import org.oscim.core.GeoPoint;
 import org.oscim.event.Gesture;
 import org.oscim.event.GestureListener;
 import org.oscim.layers.Layer;
-import org.oscim.layers.marker.MarkerItem;
+import org.oscim.layers.TileGridLayer;
+import org.oscim.layers.tile.bitmap.BitmapTileLayer;
+import org.oscim.layers.tile.buildings.BuildingLayer;
+import org.oscim.layers.tile.vector.VectorTileLayer;
+import org.oscim.layers.tile.vector.labeling.LabelLayer;
 import org.oscim.map.Map;
-import org.oscim.scalebar.MapScaleBarLayer;
-import org.oscim.backend.CanvasAdapter;
 import org.oscim.core.MapPosition;
 import org.oscim.event.Event;
-import org.oscim.renderer.BitmapRenderer;
 import org.oscim.renderer.GLViewport;
-import org.oscim.scalebar.MapScaleBar;
-import org.oscim.scalebar.MetricUnitAdapter;
+import org.oscim.theme.VtmThemes;
+import org.oscim.tiling.source.OkHttpEngine;
+import org.oscim.tiling.source.UrlTileSource;
+
+import java.io.File;
+import java.util.HashMap;
+
+import okhttp3.Cache;
+import okhttp3.OkHttpClient;
 
 /**
  * 一个显示地图的视图（View）。它负责从服务端获取地图数据。它将会捕捉屏幕触控手势事件
  */
-public final class NIMapView extends ViewGroup {
-
-    public enum COMPASS_GRAVITY {
-        LEFT_TOP,
-        RIGHT_TOP,
-        LEFT_BOTTOM,
-        RIGHT_BOTTOM
-    }
-
+public final class NIMapView extends RelativeLayout {
     /**
      * VTM地图
      */
@@ -79,41 +82,7 @@ public final class NIMapView extends ViewGroup {
      * 缩放按钮
      */
     private ImageView zoomInImage, zoomOutImage;
-
-    /**
-     * 定位图标位置
-     */
-    private COMPASS_GRAVITY compassGravity = COMPASS_GRAVITY.LEFT_TOP;
-
-    /**
-     * 缩放按钮位置
-     */
-    private Point zoomPoint = new Point(1300, 1650);
-
-    /**
-     * 比例尺按钮位置
-     */
-    private Point scalePoint = new Point(1300, 1650);
-
-    /**
-     * logo位置
-     */
-    private LogoPosition logoPosition = LogoPosition.logoPostionleftBottom;
-
-    /**
-     * 比例尺显隐控制
-     */
-    private boolean showScaleControl;
-
-    /**
-     * 比例尺图层
-     */
-    private MapScaleBarLayer mapScaleBarLayer;
-
-    /**
-     * 比例尺
-     */
-    private CustomMapScaleBar mapScaleBar;
+    private View zoomLayout;
 
     /**
      * 地图的单击事件监听
@@ -133,66 +102,37 @@ public final class NIMapView extends ViewGroup {
      * 地图的触摸事件
      */
     private NavinfoMap.OnMapTouchListener touchListener;
-
-//    /**
-//     * 地图的状态改变事件
-//     * */
-//    private NavinfoMap.OnMapStatusChangeListener mapStatusChangeListener;
-
     /**
-     * 根据给定的参数构造一个NIMapView 的新对象。
-     *
-     * @param context
-     */
-    public NIMapView(Context context) {
-        this(context, null);
-    }
+     * 地图图层管理器
+     * */
+    private NavinfoLayerManager mLayerManager;
+    private Layer baseRasterLayer, defaultVectorTileLayer, defaultVectorLabelLayer, gridLayer;
 
-    /**
-     * 根据给定的参数构造一个NIMapView 的新对象。
-     *
-     * @param context
-     * @param attrs
-     */
     public NIMapView(Context context, AttributeSet attrs) {
-        this(context, attrs, 0);
+        super(context, attrs);
+        initView(context);
     }
 
-    /**
-     * 根据给定的参数构造一个NIMapView 的新对象。
-     *
-     * @param context
-     * @param attrs
-     * @param defStyle
-     */
-    public NIMapView(Context context, AttributeSet attrs, int defStyle) {
-        this(context, attrs, defStyle, 0);
+    public NIMapView(Context context, AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        initView(context);
     }
 
-    /**
-     * 根据给定的参数构造一个NIMapView 的新对象。
-     *
-     * @param context
-     * @param attrs
-     * @param defStyleAttr
-     * @param defStyleRes
-     */
     public NIMapView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
-        ViewGroup.LayoutParams layoutParams = new MarginLayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-        mapView = new MapView(context);
+        initView(context);
+    }
+
+    private void initView(Context context) {
+        View rootView = LayoutInflater.from(context).inflate(R.layout.base_map_layout, this, true);
+
+        mapView = rootView.findViewById(R.id.nimapview);
         map = new NavinfoMap(this);
-        addView(mapView, layoutParams);
-        compassImage = new ImageView(context);
-        compassImage.setImageResource(R.mipmap.compass);
-        ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        addView(compassImage, imageParams);
+        compassImage = rootView.findViewById(R.id.navinfo_map_compass);
+        mLayerManager = new NavinfoLayerManager(getVtmMap());
 
-        logoImage = new ImageView(context);
-        logoImage.setImageResource(R.mipmap.logo);
-        ViewGroup.LayoutParams logoParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-        addView(logoImage, logoParams);
-
+        initMapGroup(); // 初始化图层组
+        logoImage = rootView.findViewById(R.id.navinfo_map_logo);
         mRotateAnimation = new RotateAnimation(compassImage);
         getVtmMap().events.bind(new Map.UpdateListener() {
             @Override
@@ -221,8 +161,18 @@ public final class NIMapView extends ViewGroup {
 
 
         // 增加事件图层
-        MapEventsReceiver mapEventsReceiver = new MapEventsReceiver(getVtmMap());
-        getVtmMap().layers().add(mapEventsReceiver);
+        NIMapView.MapEventsReceiver mapEventsReceiver = new NIMapView.MapEventsReceiver(getVtmMap());
+        getVtmMap().layers().add(mapEventsReceiver, LAYER_GROUPS.OPERATE.groupIndex);
+
+        // 增加比例尺图层
+        NaviMapScaleBar naviMapScaleBar = new NaviMapScaleBar(getVtmMap());
+        naviMapScaleBar.initScaleBarLayer(GLViewport.Position.BOTTOM_LEFT, 25, 60);
+
+        if (gridLayer == null) {
+            gridLayer = new TileGridLayer(getVtmMap());
+            getVtmMap().layers().add(gridLayer, LAYER_GROUPS.ALLWAYS_SHOW_GROUP.groupIndex);
+            gridLayer.setEnabled(false);
+        }
 
         mapView.setOnTouchListener(new OnTouchListener() {
             @Override
@@ -244,26 +194,16 @@ public final class NIMapView extends ViewGroup {
             }
         });
 
-        zoomInImage = new ImageView(context);
-        zoomInImage.setImageResource(R.drawable.icon_map_zoom_in);
+        zoomInImage = rootView.findViewById(R.id.navinfo_map_zoom_in);
         zoomInImage.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View arg0) {
-//                if (mapView.map().layers()!=null&&!mapView.map().layers().isEmpty()) {
-//                    for (Layer layer : mapView.map().layers()) {
-//                        if (layer instanceof MapScaleBarLayer) {
-//                        }
-//                    }
-//                }
-
-                NaviMapScaleBar naviMapScaleBar = MapManager.getInstance().getNaviMapScaleBar();
-
                 zoomIn(arg0);
             }
         });
 
-        zoomOutImage = new ImageView(context);
+        zoomOutImage = rootView.findViewById(R.id.navinfo_map_zoom_out);
         zoomOutImage.setImageResource(R.drawable.icon_map_zoom_out);
         zoomOutImage.setOnClickListener(new OnClickListener() {
 
@@ -272,180 +212,120 @@ public final class NIMapView extends ViewGroup {
                 zoomOut(arg0);
             }
         });
-    }
 
-    @Override
-    public ViewGroup.LayoutParams generateLayoutParams(AttributeSet attrs) {
-        return new MarginLayoutParams(getContext(), attrs);
+        zoomLayout = rootView.findViewById(R.id.navinfo_map_zoom_layer);
+
+        initMap();
     }
 
     /**
-     * 计算所有ChildView的宽度和高度 然后根据ChildView的计算结果，设置自己的宽和高
-     */
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        /**
-         * 获得此ViewGroup上级容器为其推荐的宽和高，以及计算模式
-         */
-        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
-        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
-        int sizeWidth = MeasureSpec.getSize(widthMeasureSpec);
-        int sizeHeight = MeasureSpec.getSize(heightMeasureSpec);
+     * 初始化地图
+     * */
+    private void initMap(){
+        switchBaseMapType(BASE_MAP_TYPE.OPEN_STREET_MAP);
+        switchTileVectorLayerTheme(MAP_THEME.DEFAULT);
+    }
+
+    private void initMapGroup() {
+        for (LAYER_GROUPS groups: LAYER_GROUPS.values()) {
+            getVtmMap().layers().addGroup(groups.groupIndex);
+        }
+    }
 
 
-        // 计算出所有的childView的宽和高
-        measureChildren(widthMeasureSpec, heightMeasureSpec);
-        /**
-         * 记录如果是wrap_content是设置的宽和高
-         */
-        int width = 0;
-        int height = 0;
+    /**
+     * 切换基础底图样式
+     * */
+    public void switchBaseMapType(BASE_MAP_TYPE type) {
+        if (baseRasterLayer!=null) {
+            getVtmMap().layers().remove(baseRasterLayer);
+            baseRasterLayer = null;
+            getVtmMap().updateMap();
+        }
+        baseRasterLayer = mLayerManager.getRasterTileLayer(type.url, type.tilePath, true);
+        getVtmMap().layers().add(baseRasterLayer, LAYER_GROUPS.BASE_RASTER.groupIndex);
+        getVtmMap().clearMap();
+    }
 
-        int cCount = getChildCount();
+    public void addDefaultVectorTileLayer(MAP_THEME theme) {
+        if (defaultVectorTileLayer!=null) {
+            getVtmMap().layers().remove(defaultVectorTileLayer);
+            defaultVectorTileLayer = null;
+            getVtmMap().updateMap();
+        }
+        defaultVectorTileLayer = mLayerManager.getDefaultVectorLayer(true);
+        getVtmMap().layers().add(defaultVectorTileLayer, LAYER_GROUPS.VECTOR_TILE.groupIndex);
+        defaultVectorLabelLayer = new LabelLayer(getVtmMap(), (VectorTileLayer) defaultVectorTileLayer);
+        getVtmMap().layers().add(defaultVectorLabelLayer, LAYER_GROUPS.VECTOR_TILE.groupIndex);
+        if (theme!=null) {
+            switchTileVectorLayerTheme(theme);
+        }
+        getVtmMap().updateMap();
+    }
 
-        int cWidth = 0;
-        int cHeight = 0;
-        MarginLayoutParams cParams = null;
+    public void setBaseRasterVisiable(boolean visiable) {
+        if (baseRasterLayer!=null) {
+            baseRasterLayer.setEnabled(visiable);
+            getVtmMap().updateMap();
+        }
+    }
 
-        // 用于计算左边两个childView的高度
-        int lHeight = 0;
-        // 用于计算右边两个childView的高度，最终高度取二者之间大值
-        int rHeight = 0;
+    /**
+     * 基础
+     * */
+    public enum BASE_MAP_TYPE {
+        OPEN_STREET_MAP("http://a.tile.openstreetmap.org", "/{Z}}/{X}/{Y}.png"), // openStreetMap底图
+        CYCLE_MAP("http://c.tile.opencyclemap.org/cycle", "/{Z}}/{X}/{Y}.png"), // cyclemap底图
+        TRANSPORT_MAP("http://b.tile2.opencyclemap.org/transport", "/{Z}}/{X}/{Y}.png"); // TransportMap底图
+        String url;
+        String tilePath;
 
-        // 用于计算上边两个childView的宽度
-        int tWidth = 0;
-        // 用于计算下面两个childiew的宽度，最终宽度取二者之间大值
-        int bWidth = 0;
+        BASE_MAP_TYPE(String url, String tilePath) {
+            this.url = url;
+            this.tilePath = tilePath;
+        }
+    }
 
-        /**
-         * 根据childView计算的出的宽和高，以及设置的margin计算容器的宽和高，主要用于容器是warp_content时
-         */
-        for (int i = 0; i < cCount; i++) {
-            View childView = getChildAt(i);
-            cWidth = childView.getMeasuredWidth();
-            cHeight = childView.getMeasuredHeight();
-            cParams = (MarginLayoutParams) childView.getLayoutParams();
+    /**
+     * 网格图层是否显示
+     * */
+    public void setGridLayerVisiable(boolean visiable) {
+        if (gridLayer!=null) {
+            gridLayer.setEnabled(visiable);
+            getVtmMap().updateMap();
+        }
+    }
 
-            // 上面两个childView
-            tWidth += cWidth + cParams.leftMargin + cParams.rightMargin;
-            lHeight += cHeight + cParams.topMargin + cParams.bottomMargin;
+    /**
+     * 图层组定义
+     *
+     * */
+    public enum LAYER_GROUPS {
+        BASE_RASTER(0)/*栅格底图*/, BASE_VECTOR(1)/*矢量底图*/,
+        RASTER_TILE(2)/*栅格网格*/, VECTOR_TILE(3)/*矢量网格*/,
+        VECTOR(4)/*矢量图层组*/, OTHER(5)/*其他图层*/,
+        OPERATE(7)/*操作图层组*/,ALLWAYS_SHOW_GROUP(6);
+        int groupIndex;
 
+        LAYER_GROUPS(int groupIndex) {
+            this.groupIndex = groupIndex;
         }
 
-        width = Math.max(tWidth, bWidth);
-        height = Math.max(lHeight, rHeight);
-
-        /**
-         * 如果是wrap_content设置为我们计算的值
-         * 否则：直接设置为父容器计算的值
-         */
-        setMeasuredDimension((widthMode == MeasureSpec.EXACTLY) ? sizeWidth
-                : width, (heightMode == MeasureSpec.EXACTLY) ? sizeHeight
-                : height);
+        public int getGroupIndex() {
+            return groupIndex;
+        }
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        int cCount = getChildCount();
-        int cWidth = 0;
-        int cHeight = 0;
-        MarginLayoutParams cParams = null;
-        /**
-         * 遍历所有childView根据其宽和高，以及margin进行布局
-         */
-        for (int i = 0; i < cCount; i++) {
-            View childView = getChildAt(i);
-            cWidth = childView.getMeasuredWidth();
-            cHeight = childView.getMeasuredHeight();
-            cParams = (MarginLayoutParams) childView.getLayoutParams();
+        super.onLayout(changed, l, t, r, b);
+    }
 
-            int cl = 0, ct = 0, cr = 0, cb = 0;
-
-            if (compassImage == childView) {
-
-                int offCompassX = 0, offCompassY = 0;
-                if (map != null && map.getCompassPosition() != null) {
-                    offCompassX = map.getCompassPosition().x;
-                    offCompassY = map.getCompassPosition().y;
-                }
-
-                switch (compassGravity) {
-                    case LEFT_TOP:
-                        cl = cParams.leftMargin + offCompassX;
-                        ct = cParams.topMargin + offCompassY;
-                        break;
-                    case RIGHT_TOP:
-                        cl = getWidth() - cWidth - cParams.leftMargin
-                                - cParams.rightMargin - offCompassX;
-                        ct = cParams.topMargin + offCompassY;
-
-                        break;
-                    case LEFT_BOTTOM:
-                        cl = cParams.leftMargin + offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
-                        break;
-                    case RIGHT_BOTTOM:
-                        cl = getWidth() - cWidth - cParams.leftMargin
-                                - cParams.rightMargin - offCompassX;
-                        ct = getHeight() - cHeight - cParams.bottomMargin - offCompassY;
-                        break;
-                }
-
-            } else if (logoImage == childView) {
-
-                switch (logoPosition) {
-                    case logoPostionCenterBottom:
-                        cl = getWidth()/2 - cWidth/2 - cParams.leftMargin
-                                - cParams.rightMargin;
-                        ct = getHeight() - cHeight - cParams.bottomMargin;
-                        break;
-                    case logoPostionCenterTop:
-                        cl = getWidth()/2 - cWidth/2 - cParams.leftMargin
-                                - cParams.rightMargin;
-                        ct = cParams.topMargin;
-                        break;
-                    case logoPostionleftBottom:
-                        cl = cParams.leftMargin;
-                        ct = getHeight() - cHeight - cParams.bottomMargin;
-                        break;
-                    case logoPostionleftTop:
-                        cl = cParams.leftMargin;
-                        ct = cParams.topMargin;
-                        break;
-                    case logoPostionRightBottom:
-                        cl = getWidth() - cWidth - cParams.leftMargin
-                                - cParams.rightMargin ;
-                        ct = getHeight() - cHeight - cParams.bottomMargin;
-                        break;
-                    case logoPostionRightTop:
-                        cl = getWidth() - cWidth - cParams.leftMargin
-                                - cParams.rightMargin;
-                        ct = cParams.topMargin ;
-                        break;
-                }
-                Log.e("qj", cHeight + "logoImage");
-            } else if (zoomInImage == childView) {
-                cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
-                ct = zoomPoint.y - cParams.bottomMargin;
-                Log.e("qj", cHeight + "zoomInImage");
-            } else if (zoomOutImage == childView) {
-                cl = zoomPoint.x - cParams.leftMargin - cParams.rightMargin;
-                if (zoomInImage != null) {
-                    ct = zoomPoint.y - cParams.bottomMargin + zoomInImage.getMeasuredHeight() + cParams.topMargin + 12;
-                    Log.e("qj", zoomInImage.getMeasuredHeight() + "zoomInImage.getMeasuredHeight()" + cParams.topMargin);
-                } else {
-                    ct = zoomPoint.y - cParams.bottomMargin + cParams.topMargin + 12;
-                }
-                Log.e("qj", cHeight + "zoomOutImage");
-            } else {
-                cl = cParams.leftMargin;
-                ct = cParams.topMargin;
-            }
-            cr = cl + cWidth;
-            cb = cHeight + ct;
-            childView.layout(cl, ct, cr, cb);
-        }
-
+    public enum GRAVITY {
+        LEFT_TOP,
+        RIGHT_TOP,
+        LEFT_BOTTOM,
+        RIGHT_BOTTOM
     }
 
     /**
@@ -500,7 +380,7 @@ public final class NIMapView extends ViewGroup {
      * @param child
      * @param params
      */
-    public void addView(View child, LayoutParams params) {
+    public void addView(View child, ViewGroup.LayoutParams params) {
         super.addView(child, params);
     }
 
@@ -511,25 +391,6 @@ public final class NIMapView extends ViewGroup {
      */
     public void removeView(View view) {
         super.removeView(view);
-    }
-
-    /**
-     * 获取Logo位置
-     *
-     * @return
-     */
-    public LogoPosition getLogoPosition() {
-
-        return logoPosition;
-    }
-
-    /**
-     * 设置Logo位置
-     *
-     * @param position
-     */
-    public void setLogoPosition(LogoPosition position) {
-        this.logoPosition = position;
     }
 
 
@@ -548,7 +409,7 @@ public final class NIMapView extends ViewGroup {
      *
      * @return
      */
-    public Map getVtmMap() {
+    protected Map getVtmMap() {
         if (mapView != null)
             return mapView.map();
         return null;
@@ -636,93 +497,6 @@ public final class NIMapView extends ViewGroup {
         this.touchListener = listener;
     }
 
-
-//    /**
-//     * 设置地图状态监听者
-//     *
-//     * @param listener
-//     */
-//    public void setOnMapStatusChangeListener(NavinfoMap.OnMapStatusChangeListener listener) {
-//        this.mapStatusChangeListener = listener;
-//    }
-
-    /**
-     * 获取比例尺控件对应的屏幕位置
-     *
-     * @return
-     */
-    public Point getScaleControlPosition() {
-        return this.scalePoint;
-    }
-
-    /**
-     * 获取比例尺控件的高度
-     *
-     * @return
-     */
-    public int getScaleControlViewHeight() {
-        if (mapScaleBar != null)
-            return mapScaleBar.getBitmapHeight();
-        return 0;
-    }
-
-
-    /**
-     * 获取比例尺控件的宽度
-     *
-     * @return
-     */
-    public int getScaleControlViewWidth() {
-        if (mapScaleBar != null)
-            return mapScaleBar.getBitmapWidth();
-        return 0;
-    }
-
-
-    /**
-     * 设置比例尺控件的位置，在 onMapLoadFinish 后生效
-     *
-     * @param p
-     */
-    public void setScaleControlPosition(Point p) {
-        this.scalePoint = p;
-        if (this.scalePoint != null && mapScaleBarLayer != null) {
-            mapScaleBarLayer.getRenderer().setOffset(this.scalePoint.x, this.scalePoint.y);
-        }
-    }
-
-
-    /**
-     * 设置缩放控件的位置，在 onMapLoadFinish 后生效
-     *
-     * @param p
-     */
-    public void setZoomControlsPosition(Point p) {
-        this.zoomPoint = p;
-    }
-
-    /**
-     * 获取缩放控件的屏幕位置
-     *
-     * @return
-     */
-    public Point getZoomControlsPosition() {
-
-        return zoomPoint;
-    }
-
-
-    /**
-     * 获取比例尺控件是否显示
-     *
-     * @return
-     */
-    public boolean isShowScaleControl() {
-
-        return showScaleControl;
-    }
-
-
     /**
      * 设置MotionEvent
      *
@@ -732,33 +506,69 @@ public final class NIMapView extends ViewGroup {
 
     }
 
-
     /**
-     * 设置是否显示比例尺控件
-     *
-     * @param show
-     */
-    public void showScaleControl(boolean show) {
-        this.showScaleControl = show;
-        if (show) {
-            if (mapScaleBarLayer == null) {
-                mapScaleBar = new CustomMapScaleBar(getVtmMap());
-                mapScaleBar.setScaleBarMode(CustomMapScaleBar.ScaleBarMode.SINGLE);
-                mapScaleBar.setDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
-                mapScaleBar.setSecondaryDistanceUnitAdapter(MetricUnitAdapter.INSTANCE);
-                mapScaleBar.setScaleBarPosition(MapScaleBar.ScaleBarPosition.BOTTOM_LEFT); // 设置文字显示位置
-                mapScaleBarLayer = new MapScaleBarLayer(getVtmMap(), mapScaleBar);
-                BitmapRenderer renderer = mapScaleBarLayer.getRenderer();
-                //默认左上角
-                renderer.setPosition(GLViewport.Position.TOP_LEFT);
-                renderer.setOffset(25 * CanvasAdapter.getScale(), 60);
-            }
-            getVtmMap().layers().add(mapScaleBarLayer, MapGroupEnum.OTHER_GROUP.ordinal());
-        } else {
-            getVtmMap().layers().remove(mapScaleBarLayer);
+     * 设置缩放按钮位置
+     * @param position 按钮位置
+     * */
+    public void setZoomControlPosition(GRAVITY position) {
+        if (zoomLayout!=null) {
+            setLayoutParams(position, zoomLayout);
         }
     }
 
+    /**
+     * 设置缩放按钮位置
+     * @param position 按钮位置
+     * */
+    public void setLogoPosition(GRAVITY position) {
+        if (logoImage!=null) {
+            setLayoutParams(position, logoImage);
+        }
+    }
+
+    /**
+     * 设置缩放按钮位置
+     * @param position 按钮位置
+     * */
+    public void setCompassPosition(GRAVITY position) {
+        if (compassImage!=null) {
+            setLayoutParams(position, compassImage);
+        }
+    }
+
+
+    /**
+     * 根据GRAVITY生成对应的layoutParams
+     * @param position 按钮相对于父布局的位置
+     * @param view 被设置显示位置的view
+     * */
+    private void setLayoutParams(GRAVITY position, View view) {
+        RelativeLayout.LayoutParams layoutParams = (LayoutParams) view.getLayoutParams();
+        if (layoutParams.getRules()!=null) {
+            for (int i=0; i<layoutParams.getRules().length; i++) {
+                layoutParams.removeRule(i);
+            }
+        }
+        switch (position) {
+            case LEFT_TOP:
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                break;
+            case RIGHT_TOP:
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                break;
+            case LEFT_BOTTOM:
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                break;
+            case RIGHT_BOTTOM:
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+                layoutParams.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                break;
+        }
+        view.setLayoutParams(layoutParams);
+    }
 
     /**
      * 设置是否显示缩放控件
@@ -766,13 +576,23 @@ public final class NIMapView extends ViewGroup {
      * @param show
      */
     public void showZoomControls(boolean show) {
-        if (show) {
-            ViewGroup.LayoutParams imageParams = new MarginLayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
-            addView(zoomOutImage, imageParams);
-            addView(zoomInImage, imageParams);
-        } else {
-            removeView(zoomInImage);
-            removeView(zoomOutImage);
+        if (zoomLayout!=null) {
+            if (show) {
+                zoomLayout.setVisibility(VISIBLE);
+            } else {
+                zoomLayout.setVisibility(GONE);
+            }
+        }
+    }
+
+    /**
+     * 设置是否显示缩放控件
+     *
+     * @param show
+     */
+    public void showCompass(boolean show) {
+        if (map!=null) {
+            map.setCompassEnable(show);
         }
     }
 
@@ -809,5 +629,67 @@ public final class NIMapView extends ViewGroup {
             }
             return false;
         }
+    }
+
+    public enum MAP_THEME {
+        DEFAULT(0),  NEWTRON(1), OSMAGRAY(2),
+        OSMARENDER(3),TRONRENDER(4);
+        int themeId;
+
+        MAP_THEME(int themeId) {
+            this.themeId = themeId;
+        }
+
+        public MAP_THEME getMapTheme(int themeId) {
+            MAP_THEME theme = DEFAULT;
+            switch (themeId) {
+                case 1:
+                    theme = NEWTRON;
+                    break;
+                case 2:
+                    theme = OSMAGRAY;
+                    break;
+                case 3:
+                    theme = OSMARENDER;
+                    break;
+                case 4:
+                    theme = TRONRENDER;
+                    break;
+            }
+            return theme;
+        }
+    }
+
+    public void switchTileVectorLayerTheme(MAP_THEME styleId) {
+        // 如果不包含vectorlayer，则设置theme无效
+        boolean bHis = false;
+        for (Layer layer : getVtmMap().layers()) {
+            if (layer instanceof VectorTileLayer) {
+                bHis = true;
+                break;
+            }
+        }
+        if (!bHis) {
+            getVtmMap().updateMap(true);
+            return;
+        }
+        switch (styleId) {
+            case NEWTRON:
+                getVtmMap().setTheme(VtmThemes.NEWTRON, true);
+                break;
+            case OSMAGRAY:
+                getVtmMap().setTheme(VtmThemes.OSMAGRAY, true);
+                break;
+            case OSMARENDER:
+                getVtmMap().setTheme(VtmThemes.OSMARENDER, true);
+                break;
+            case TRONRENDER:
+                getVtmMap().setTheme(VtmThemes.TRONRENDER, true);
+                break;
+            default:
+                getVtmMap().setTheme(VtmThemes.DEFAULT, true);
+                break;
+        }
+        getVtmMap().updateMap();
     }
 }

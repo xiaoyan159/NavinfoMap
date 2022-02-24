@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">NaviMap-Example</string>
+    <string-array name="array_view_position">
+        <item>默认</item>
+        <item>左上</item>
+        <item>左下</item>
+        <item>右上</item>
+        <item>右下</item>
+    </string-array>
+    <string-array name="vector_tile_layer_theme">
+        <item>默认</item>
+        <item>暗黑多彩</item>
+        <item>简约灰色</item>
+        <item>多彩</item>
+        <item>暗黑</item>
+    </string-array>
 </resources>

@@ -1,12 +1,15 @@
 package com.navinfo.mapapi.map;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.navinfo.mapapi.layers.NaviLocationLayer;
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
 
@@ -37,25 +40,19 @@ import java.util.List;
 /**
  * 定义 NavinfoMap 地图对象的操作方法与接口
  */
-public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureListener<MarkerInterface> {
-
+public class NavinfoMap {
     /**
      *
      */
-    Map map;
+    private Map map;
     /**
      * 地图控件
      */
-    NIMapView mMapView;
+    private NIMapView mMapView;
     /**
      * 指北针显隐
      */
     private boolean enableCompassImage = true;
-
-    /**
-     * 指北针位置
-     */
-    private Point compassPoint;
 
     /**
      * marker图层
@@ -83,11 +80,15 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
     private java.util.Map<String, Drawable> mapDrawableCache;
 
     /**
+     * 用户位置显示图层
+     * */
+    private NaviLocationLayer locationLayer;
+    /**
      * 构造函数
      */
     public NavinfoMap(NIMapView niMapView) {
         this.mMapView = niMapView;
-        this.map = niMapView.getVtmMap();
+        this.map = mMapView.getVtmMap();
         this.mapCache = new HashMap<>();
         this.mapDrawableCache = new HashMap<>();
     }
@@ -97,8 +98,7 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      *
      * @return
      */
-    public Map getVtmMap() {
-
+    private Map getVtmMap() {
         return map;
     }
 
@@ -109,7 +109,6 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      * @return
      */
     public Overlay addOverlay(OverlayOptions options) {
-
         if (options != null) {
             if (options instanceof MarkerOptions) {
                 Marker marker = new Marker();
@@ -322,16 +321,6 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
     }
 
     /**
-     * 获取屏幕坐标系下指南针位置
-     *
-     * @return
-     */
-    public android.graphics.Point getCompassPosition() {
-
-        return compassPoint;
-    }
-
-    /**
      * 获取地图显示大小等级
      *
      * @return
@@ -386,7 +375,6 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      * @return
      */
     public float getMaxZoomLevel() {
-
         return map.viewport().getMaxZoomLevel();
     }
 
@@ -559,15 +547,6 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
 
 
     /**
-     * 设置指南针的位置
-     *
-     * @param p
-     */
-    public void setCompassPosition(android.graphics.Point p) {
-        this.compassPoint = p;
-    }
-
-    /**
      * 设置地图显示大小等级
      *
      * @param level
@@ -652,20 +631,38 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
      *
      * @param data
      */
-    public void setMyLocationData(MyLocationData data) {
-
+    public void setMyLocationData(Location data) {
+        if (locationLayer == null) {
+            return;
+        }
+        locationLayer.setPosition(data.getLatitude(), data.getLongitude(), data.getAccuracy());
     }
 
+    public void setMyLocationData(double lat, double lon, float accuracy) {
+        if (locationLayer == null) {
+            return;
+        }
+        locationLayer.setPosition(lat, lon, accuracy);
+    }
 
     /**
      * 设置是否允许定位图层
      *
      * @param enabled
      */
-    public void setMyLocationEnabled(boolean enabled) {
-
+    public void setMyLocationEnabled(Context mContext, boolean enabled) {
+        initLocaitonLayer(mContext);
+        locationLayer.setEnabled(enabled);
     }
 
+    private void initLocaitonLayer(Context mContext) {
+        if (map == null) {
+            throw new IllegalStateException("map不可用，无法显示当前位置！");
+        }
+        if (locationLayer == null) {
+            locationLayer = new NaviLocationLayer(mContext, map);
+        }
+    }
 
     /**
      * 设置地图单击事件监听者
@@ -1082,35 +1079,71 @@ public class NavinfoMap extends Object implements ItemizedLayer.OnItemGestureLis
 
     }
 
-    @Override
-    public boolean onItemSingleTapUp(int index, MarkerInterface item) {
-        if (this.onMarkerClickListener != null) {
-            MarkerItem markerItem = (MarkerItem) item;
-            if (markerItem.getTitle() != null && this.mapCache != null && this.mapCache.containsKey(markerItem.getTitle())) {
-                Marker marker = (Marker) this.mapCache.get(markerItem.getTitle());
-                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(), markerItem.getPoint().getLongitude()));
-                marker.setIcon(new BitmapDescriptor(markerItem.getMarker().getBitmap()));
-                if (this.onMarkerClickListener != null) {
-                    return this.onMarkerClickListener.onMarkerClick(marker);
-                }
-            }
-        }
-        return false;
+    public void updateMap() {
+        getVtmMap().updateMap();
     }
 
-    @Override
-    public boolean onItemLongPress(int index, MarkerInterface item) {
-        if (this.onMarkerClickListener != null) {
-            MarkerItem markerItem = (MarkerItem) item;
-            if (markerItem.getTitle() != null && this.mapCache != null && this.mapCache.containsKey(markerItem.getTitle())) {
-                Marker marker = (Marker) this.mapCache.get(markerItem.getTitle());
-                marker.setPosition(new LatLng(markerItem.getPoint().getLatitude(), markerItem.getPoint().getLongitude()));
-                marker.setIcon(new BitmapDescriptor(markerItem.getMarker().getBitmap()));
-                if (this.onMarkerClickListener != null) {
-                    return this.onMarkerClickListener.onMarkerLongClick(marker);
-                }
-            }
+    public void updateMap(boolean redraw) {
+        getVtmMap().updateMap(redraw);
+    }
+
+    public void render() {
+        getVtmMap().render();
+    }
+
+    public boolean post(Runnable action) {
+        return getVtmMap().post(action);
+    }
+
+    public boolean postDelayed(Runnable action, long delay) {
+        return getVtmMap().postDelayed(action, delay);
+    }
+
+    public int getWidth() {
+        return getVtmMap().getWidth();
+    }
+
+    public int getHeight() {
+        return getVtmMap().getHeight();
+    }
+
+    public int getScreenWidth() {
+        return getVtmMap().getScreenWidth();
+    }
+
+    public int getScreenHeight() {
+        return getVtmMap().getScreenHeight();
+    }
+
+    public void beginFrame() {
+        getVtmMap().beginFrame();
+    }
+
+    public void doneFrame(boolean needsRedraw) {
+        getVtmMap().doneFrame(needsRedraw);
+    }
+
+    public int getMapZoomLevel() {
+        return getVtmMap().getMapPosition().getZoomLevel();
+    }
+
+    /**
+     * 设置地图
+     * */
+    public void setMapPosition(double lat, double lon, int zoomLevel) {
+        double scale = 1 << zoomLevel;
+        getVtmMap().setMapPosition(lat, lon, scale);
+    }
+
+    public void animateMapPosition(double lat, double lon, int zoomLevel, int duration) {
+        if (duration < 0) {
+            duration = 500;
         }
-        return false;
+        if (zoomLevel <= 0) {
+            zoomLevel = getVtmMap().getMapPosition().zoomLevel;
+        }
+        double scale = 1 << zoomLevel;
+        MapPosition mapPosition = new MapPosition(lat, lon, scale);
+        getVtmMap().animator().animateTo(duration, mapPosition);
     }
 }

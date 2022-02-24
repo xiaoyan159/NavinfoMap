@@ -14,7 +14,7 @@ android {
 
     defaultConfig {
         minSdkVersion 22
-        targetSdkVersion 26
+        targetSdkVersion 29
         versionCode 1
         versionName "1.0"
 
@@ -34,7 +34,7 @@ android {
 }
 
 dependencies {
-
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.0'
     testImplementation 'junit:junit:4.+'
@@ -52,6 +52,7 @@ dependencies {
     implementation "org.mapsforge:vtm-http:$coreVersion"
     implementation "org.mapsforge:vtm-mvt:$coreVersion"
     implementation "org.mapsforge:vtm-jts:$coreVersion"
+    implementation "org.mapsforge:vtm-json:$coreVersion"
     implementation 'org.locationtech.spatial4j:spatial4j:0.7'
     implementation 'org.mapsforge:mapsforge-poi-android:0.15.0'
     implementation 'org.mapsforge:sqlite-android:0.15.0:natives-armeabi-v7a'

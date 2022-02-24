@@ -43,7 +43,16 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".BaseMapActivity">
+        </activity>
+        <activity android:name=".MapWidgetActivity">
+        </activity>
+        <activity android:name=".MapLocaitionActivity">
+        </activity>
+        <activity android:name=".BaseMapTypeActivity">
+        </activity>
+        <activity android:name=".VectorTileMapActivity">
         </activity>
     </application>
 

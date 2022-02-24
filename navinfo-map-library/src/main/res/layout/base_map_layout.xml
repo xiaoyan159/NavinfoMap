@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <org.oscim.android.MapView
+        android:id="@+id/nimapview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></org.oscim.android.MapView>
+    <ImageView
+        android:id="@+id/navinfo_map_compass"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/nimap_defalut_padding"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="50dp"
+        android:src="@mipmap/compass"></ImageView>
+
+    <ImageView
+        android:id="@+id/navinfo_map_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:src="@mipmap/logo"
+        android:padding="@dimen/nimap_defalut_padding"></ImageView>
+
+    <LinearLayout
+        android:id="@+id/navinfo_map_zoom_layer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/nimap_defalut_padding"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:orientation="vertical">
+        <ImageView
+            android:id="@+id/navinfo_map_zoom_in"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_map_zoom_in"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/bg_nimap_default_button"></ImageView>
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/nimap_defalut_padding"></Space>
+        <ImageView
+            android:id="@+id/navinfo_map_zoom_out"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon_map_zoom_out"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="@drawable/bg_nimap_default_button"></ImageView>
+    </LinearLayout>
+</RelativeLayout>

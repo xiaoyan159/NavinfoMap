@@ -5,10 +5,13 @@ import android.content.Context;
 
 import com.navinfo.mapapi.R;
 import com.navinfo.mapapi.canvas.NaviAndroidBitmap;
+import com.navinfo.mapapi.map.NIMapView;
 
 import org.oscim.android.canvas.AndroidBitmap;
 import org.oscim.backend.CanvasAdapter;
 import org.oscim.backend.canvas.Bitmap;
+import org.oscim.layers.Layer;
+import org.oscim.layers.LocationLayer;
 import org.oscim.layers.LocationTextureLayer;
 import org.oscim.map.Map;
 import org.oscim.renderer.LocationCallback;
@@ -18,19 +21,21 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class NaviLocationLayer extends LocationTextureLayer {
-    public NaviLocationLayer(Map map) {
-        this(map, CanvasAdapter.getScale());
+    public NaviLocationLayer(Context mContext, Map map) {
+        this(mContext, map, CanvasAdapter.getScale());
     }
 
-    public NaviLocationLayer(Map map, float scale) {
+    public NaviLocationLayer(Context mContext, Map map, float scale) {
         super(map, scale);
+        init(mContext);
     }
 
-    public void init(Context mContext) {
+    private void init(Context mContext) {
+        createLocationLayers(mContext, mMap);
     }
 
     @SuppressLint("ResourceType")
-    private void createLocationLayers(Context mContext, Map mMap) {
+    private Layer createLocationLayers(Context mContext, Map mMap) {
 
         InputStream is = null;
 
@@ -55,23 +60,12 @@ public class NaviLocationLayer extends LocationTextureLayer {
         }
 
         // 显示当前位置图层
-        LocationTextureLayer mLocationLayer = new LocationTextureLayer(mMap);
-        mLocationLayer.locationRenderer.setBitmapArrow(bitmapArrow);
-        mLocationLayer.locationRenderer.setBitmapMarker(bitmapMarker);
-        mLocationLayer.locationRenderer.setColor(0xffa1dbf5);
-        mLocationLayer.locationRenderer.setShowAccuracyZoom(4);
-        mLocationLayer.locationRenderer.setCallback(new LocationCallback() {
-            @Override
-            public boolean hasRotation() {
-                return true;
-            }
-
-            @Override
-            public float getRotation() {
-                return 0;
-            }
-        });
-        mLocationLayer.setEnabled(false); // 默认开启当前位置显示
-        mMap.layers().add(mLocationLayer);
+        this.locationRenderer.setBitmapArrow(bitmapArrow);
+        this.locationRenderer.setBitmapMarker(bitmapMarker);
+        this.locationRenderer.setColor(0xffa1dbf5);
+        this.locationRenderer.setShowAccuracyZoom(4);
+        this.setEnabled(true); // 默认开启当前位置显示
+        mMap.layers().add(this, NIMapView.LAYER_GROUPS.ALLWAYS_SHOW_GROUP.getGroupIndex());
+        return this;
     }
 }
