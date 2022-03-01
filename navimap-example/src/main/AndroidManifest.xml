@@ -54,6 +54,8 @@
         </activity>
         <activity android:name=".VectorTileMapActivity">
         </activity>
+        <activity android:name=".OfflineMapActivity">
+        </activity>
     </application>
 
 </manifest>

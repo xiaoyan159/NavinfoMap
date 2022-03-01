@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.location.Location;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -12,6 +14,10 @@ import android.view.View;
 import com.navinfo.mapapi.layers.NaviLocationLayer;
 import com.navinfo.mapapi.model.LatLng;
 import com.navinfo.mapapi.model.LatLngBounds;
+import com.navinfo.mapapi.utils.CacheTileProgress;
+import com.navinfo.mapapi.utils.TileDownloader;
+import com.yanzhenjie.kalle.Kalle;
+import com.yanzhenjie.kalle.download.Download;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -20,11 +26,14 @@ import org.locationtech.jts.geom.LineString;
 import org.oscim.backend.canvas.Paint;
 import org.oscim.core.GeoPoint;
 import org.oscim.core.MapPosition;
+import org.oscim.core.MercatorProjection;
 import org.oscim.layers.Layer;
 import org.oscim.layers.marker.ItemizedLayer;
 import org.oscim.layers.marker.MarkerInterface;
 import org.oscim.layers.marker.MarkerItem;
 import org.oscim.layers.marker.MarkerSymbol;
+import org.oscim.layers.tile.bitmap.BitmapTileLayer;
+import org.oscim.layers.tile.vector.VectorTileLayer;
 import org.oscim.layers.vector.VectorLayer;
 import org.oscim.layers.vector.geometries.Drawable;
 import org.oscim.layers.vector.geometries.LineDrawable;
@@ -32,10 +41,17 @@ import org.oscim.layers.vector.geometries.PointDrawable;
 import org.oscim.layers.vector.geometries.PolygonDrawable;
 import org.oscim.layers.vector.geometries.Style;
 import org.oscim.map.Map;
+import org.oscim.tiling.source.UrlTileSource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * 定义 NavinfoMap 地图对象的操作方法与接口
@@ -1145,5 +1161,74 @@ public class NavinfoMap {
         double scale = 1 << zoomLevel;
         MapPosition mapPosition = new MapPosition(lat, lon, scale);
         getVtmMap().animator().animateTo(duration, mapPosition);
+    }
+
+    /**
+     * 下载离线矢量地图
+     * */
+    public void downloadVectorMap(String url, DownloadProgress downloadProgress) {
+        Kalle.Download.get(url).directory(NavinfoLayerManager.defaultDir).onProgress(new Download.ProgressBar() {
+            @Override
+            public void onProgress(int progress, long byteCount, long speed) {
+                downloadProgress.onProgress(progress, byteCount, speed);
+            }
+        });
+    }
+
+    /**
+     * 缓存urlTilesource对应的数据
+     * */
+    public List<FutureTask> cacheUrlTileMap(Rect rect, int minZoomLevel, int maxZoomLevel, CacheTileProgress progress) {
+        List<Layer> layerList = getVtmMap().layers();
+        List<UrlTileSource> urlTileSourceList = new ArrayList<>();
+        if (layerList!=null&&!layerList.isEmpty()) {
+            for (int i = 0; i < layerList.size(); i++) {
+                Layer layer = layerList.get(i);
+                if (layer instanceof BitmapTileLayer && ((BitmapTileLayer) layer).getTileSource() instanceof UrlTileSource) {
+                    UrlTileSource urlTileSource = (UrlTileSource) ((BitmapTileLayer) layer).getTileSource();
+                    urlTileSourceList.add(urlTileSource);
+                }
+            }
+        }
+        // 根据rect获取对应的地理坐标
+        GeoPoint leftTopGeoPoint = map.viewport().fromScreenPoint(rect.left, rect.top);
+        GeoPoint rightBottomGeoPoint = map.viewport().fromScreenPoint(rect.right, rect.bottom);
+        ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+        List<FutureTask> futureTaskList = new ArrayList<>();
+        progress.setLayerCount(urlTileSourceList.size());
+        for (int i = 0; i < urlTileSourceList.size(); i++) {
+            UrlTileSource urlTileSource = urlTileSourceList.get(i);
+            int finalI = i;
+            progress.setLayerId(i);
+            Callable callable = TileDownloader.getInstance().downloadRasterTile(urlTileSource, leftTopGeoPoint, rightBottomGeoPoint, (byte) minZoomLevel, (byte) maxZoomLevel, progress);
+            FutureTask futureTask = new FutureTask(callable);
+            futureTaskList.add(futureTask);
+        }
+
+        if (futureTaskList!=null&&!futureTaskList.isEmpty()){
+            for (int i = 0; i < futureTaskList.size(); i++) {
+                scheduledExecutorService.submit(futureTaskList.get(i));
+            }
+            scheduledExecutorService.shutdown();
+        }
+        return futureTaskList;
+    }
+
+    public void cancelCacheTileMap() {
+        TileDownloader.getInstance().setCanDownloadRasterTile(false);
+    }
+
+    public interface DownloadProgress {
+
+        Download.ProgressBar DEFAULT = new Download.ProgressBar() {
+            @Override
+            public void onProgress(int progress, long byteCount, long speed) {
+            }
+        };
+
+        /**
+         * Download onProgress changes.
+         */
+        void onProgress(int progress, long byteCount, long speed);
     }
 }

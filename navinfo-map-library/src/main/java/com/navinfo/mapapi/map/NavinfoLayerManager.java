@@ -1,10 +1,14 @@
 package com.navinfo.mapapi.map;
 
+import android.app.Application;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.os.Environment;
 
 import com.navinfo.mapapi.map.source.NavinfoGeoJsonTileSource;
 import com.navinfo.mapapi.map.source.NavinfoMapRastorTileSource;
 
+import org.oscim.android.cache.TileCache;
 import org.oscim.layers.GroupLayer;
 import org.oscim.layers.Layer;
 import org.oscim.layers.tile.bitmap.BitmapTileLayer;
@@ -24,14 +28,14 @@ import okhttp3.OkHttpClient;
 
 public class NavinfoLayerManager {
     private Map vtmMap;
-    private String defaultDir = Environment.getExternalStorageDirectory() + "/" + "EditorMark";
+    public static String defaultDir = Environment.getExternalStorageDirectory() + "/" + "EditorMark";
     private String defaultLocalMapPath = defaultDir + "/maps/";
 
     public NavinfoLayerManager(Map vtmMap) {
         this.vtmMap = vtmMap;
     }
 
-    public Layer getRasterTileLayer(String url, String tilePath, boolean useCache) {
+    public Layer getRasterTileLayer(Context mContext, String url, String tilePath, boolean useCache) {
         if (this.vtmMap == null) {
             throw new IllegalStateException("无法获取到map对象");
         }
@@ -47,6 +51,7 @@ public class NavinfoLayerManager {
 
         mTileSource.setHttpEngine(new OkHttpEngine.OkHttpFactory(builder));
         mTileSource.setHttpRequestHeaders(Collections.singletonMap("User-Agent", "vtm-android-example"));
+        mTileSource.setCache(new TileCache(mContext, defaultDir, url.substring(url.indexOf(":")+1)));
 
         BitmapTileLayer rasterLayer = new BitmapTileLayer(this.vtmMap, mTileSource);
         return rasterLayer;

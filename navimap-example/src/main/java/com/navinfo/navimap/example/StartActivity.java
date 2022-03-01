@@ -60,7 +60,7 @@ public class StartActivity extends Activity {
         listData.add(new StartActivityEntity("显示用户当前位置", MapLocaitionActivity.class));
         listData.add(new StartActivityEntity("栅格底图显示", BaseMapTypeActivity.class));
         listData.add(new StartActivityEntity("显示TMS在线资源", VectorTileMapActivity.class));
-        listData.add(new StartActivityEntity("离线地图", BaseMapActivity.class));
+        listData.add(new StartActivityEntity("离线地图", OfflineMapActivity.class));
     }
 
 }

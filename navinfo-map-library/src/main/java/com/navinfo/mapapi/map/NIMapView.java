@@ -107,6 +107,7 @@ public final class NIMapView extends RelativeLayout {
      * */
     private NavinfoLayerManager mLayerManager;
     private Layer baseRasterLayer, defaultVectorTileLayer, defaultVectorLabelLayer, gridLayer;
+    protected Context mContext;
 
     public NIMapView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -125,6 +126,7 @@ public final class NIMapView extends RelativeLayout {
 
     private void initView(Context context) {
         View rootView = LayoutInflater.from(context).inflate(R.layout.base_map_layout, this, true);
+        this.mContext = context;
 
         mapView = rootView.findViewById(R.id.nimapview);
         map = new NavinfoMap(this);
@@ -242,7 +244,7 @@ public final class NIMapView extends RelativeLayout {
             baseRasterLayer = null;
             getVtmMap().updateMap();
         }
-        baseRasterLayer = mLayerManager.getRasterTileLayer(type.url, type.tilePath, true);
+        baseRasterLayer = mLayerManager.getRasterTileLayer(mContext, type.url, type.tilePath, true);
         getVtmMap().layers().add(baseRasterLayer, LAYER_GROUPS.BASE_RASTER.groupIndex);
         getVtmMap().clearMap();
     }
